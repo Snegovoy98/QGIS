@@ -1,5 +1,5 @@
 /***************************************************************************
-                             qgsprocessingalgorithmdialogbase.h
+                             qgsprocessingalgorithmwidgetbase.h
                              ----------------------------------
     Date                 : November 2017
     Copyright            : (C) 2017 Nyall Dawson
@@ -13,8 +13,8 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef QGSPROCESSINGALGORITHMDIALOGBASE_H
-#define QGSPROCESSINGALGORITHMDIALOGBASE_H
+#ifndef QGSPROCESSINGALGORITHMWIDGETBASE_H
+#define QGSPROCESSINGALGORITHMWIDGETBASE_H
 
 #include "ui_qgsprocessingalgorithmdialogbase.h"
 #include "ui_qgsprocessingalgorithmprogressdialogbase.h"
@@ -32,7 +32,6 @@
 
 class QgsProcessingAlgorithm;
 class QToolButton;
-class QgsProcessingAlgorithmDialogBase;
 class QgsProcessingContextOptionsWidget;
 class QgsMessageBar;
 class QgsProcessingAlgRunnerTask;
@@ -42,7 +41,7 @@ class QgsTask;
 
 /**
  * \ingroup gui
- * \brief QgsProcessingFeedback subclass linked to a QgsProcessingAlgorithmDialogBase
+ * \brief QgsProcessingFeedback subclass linked to a QgsProcessingAlgorithmWidgetBase
  * \note Not stable API
  */
 class QgsProcessingAlgorithmDialogFeedback : public QgsProcessingFeedback
@@ -81,10 +80,10 @@ class QgsProcessingAlgorithmDialogFeedback : public QgsProcessingFeedback
 
 /**
  * \ingroup gui
- * \brief Base class for processing algorithm dialogs.
+ * \brief Base class for widgets which contain settings for running Processing algorithms.
  * \note This is not considered stable API and may change in future QGIS versions.
  */
-class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsProcessingParametersGenerator, public QgsProcessingContextGenerator, private Ui::QgsProcessingDialogBase
+class GUI_EXPORT QgsProcessingAlgorithmWidgetBase : public QDialog, public QgsProcessingParametersGenerator, public QgsProcessingContextGenerator, private Ui::QgsProcessingDialogBase
 {
     Q_OBJECT
 
@@ -93,66 +92,72 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
      * Log format options.
      * \since QGIS 3.2
      */
-    enum LogFormat
+    enum class LogFormat : int
     {
       FormatPlainText, //!< Plain text file (.txt)
       FormatHtml,      //!< HTML file (.html)
     };
+    Q_ENUM( QgsProcessingAlgorithmWidgetBase::LogFormat )
 
     /**
-     * Dialog modes.
+     * Widget modes.
      *
      * \since QGIS 3.24
      */
-    enum class DialogMode : int
+    enum class WidgetMode : int
     {
       Single, //!< Single algorithm execution mode
       Batch,  //!< Batch processing mode
     };
-    Q_ENUM( QgsProcessingAlgorithmDialogBase::DialogMode )
+    Q_ENUM( QgsProcessingAlgorithmWidgetBase::WidgetMode )
 
     /**
-     * Constructor for QgsProcessingAlgorithmDialogBase.
+     * Constructor for QgsProcessingAlgorithmWidgetBase.
      */
-    QgsProcessingAlgorithmDialogBase(
-      QWidget *parent SIP_TRANSFERTHIS = nullptr, Qt::WindowFlags flags = Qt::WindowFlags(), QgsProcessingAlgorithmDialogBase::DialogMode mode = QgsProcessingAlgorithmDialogBase::DialogMode::Single
-    );
-    ~QgsProcessingAlgorithmDialogBase() override;
+    QgsProcessingAlgorithmWidgetBase( QWidget *parent SIP_TRANSFERTHIS = nullptr, QgsProcessingAlgorithmWidgetBase::WidgetMode mode = QgsProcessingAlgorithmWidgetBase::WidgetMode::Single );
+    ~QgsProcessingAlgorithmWidgetBase() override;
 
     /**
-     * Sets the \a algorithm to run in the dialog.
+     * Sets the \a algorithm to run in the widget.
      *
-     * Ownership of the algorithm instance is transferred to the dialog.
+     * Ownership of the algorithm instance is transferred to the widget.
      *
      * \see algorithm()
      */
     void setAlgorithm( QgsProcessingAlgorithm *algorithm SIP_TRANSFER );
 
     /**
-     * Returns the algorithm running in the dialog.
+     * Returns the algorithm running in the widget.
      * \see setAlgorithm()
      */
     QgsProcessingAlgorithm *algorithm();
 
     /**
-     * Sets the main \a widget for the dialog, usually a panel for configuring algorithm parameters.
+     * Sets the main \a widget for the widget, usually a panel for configuring algorithm parameters.
      * \see mainWidget()
      */
     void setMainWidget( QgsPanelWidget *widget SIP_TRANSFER );
 
     /**
-     * Returns the main widget for the dialog, usually a panel for configuring algorithm parameters.
+     * Returns the main widget for the widget, usually a panel for configuring algorithm parameters.
      * \see setMainWidget()
      */
     QgsPanelWidget *mainWidget();
 
     /**
-     * Switches the dialog to the log page.
+     * Shows and raises the widget
+     *
+     * \since QGIS 4.2
+     */
+    void showWidget();
+
+    /**
+     * Switches the widget to the log page.
      */
     void showLog();
 
     /**
-     * Returns TRUE if an algorithm was executed in the dialog.
+     * Returns TRUE if an algorithm was executed in the widget.
      * \see results()
      * \see setExecuted()
      */
@@ -167,7 +172,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
 
     /**
      * Creates a new processing feedback object, automatically connected to the appropriate
-     * slots in this dialog.
+     * slots in this widget.
      */
     QgsProcessingFeedback *createFeedback() SIP_FACTORY;
 
@@ -177,10 +182,10 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
      * \see saveLog()
      * \since QGIS 3.2
      */
-    void saveLogToFile( const QString &path, LogFormat format = FormatPlainText );
+    void saveLogToFile( const QString &path, QgsProcessingAlgorithmWidgetBase::LogFormat format = QgsProcessingAlgorithmWidgetBase::LogFormat::FormatPlainText );
 
     /**
-     * Returns the logging level to use when running algorithms from the dialog.
+     * Returns the logging level to use when running algorithms from the widget.
      *
      * \see setLogLevel()
      * \since QGIS 3.20
@@ -188,7 +193,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     Qgis::ProcessingLogLevel logLevel() const;
 
     /**
-     * Sets the logging \a level to use when running algorithms from the dialog.
+     * Sets the logging \a level to use when running algorithms from the widget.
      *
      * \see logLevel()
      * \since QGIS 3.20
@@ -196,7 +201,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void setLogLevel( Qgis::ProcessingLogLevel level );
 
     /**
-     * Sets the parameter \a values to show in the dialog.
+     * Sets the parameter \a values to show in the widget.
      *
      * \since QGIS 3.24
      */
@@ -205,43 +210,43 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
   public slots:
 
     /**
-     * Reports an \a error string to the dialog's log.
+     * Reports an \a error string to the widget's log.
      *
      * If \a fatalError is TRUE, the error prevented the algorithm from executing.
      */
     void reportError( const QString &error, bool fatalError );
 
     /**
-     * Pushes a warning information string to the dialog's log.
+     * Pushes a warning information string to the widget's log.
      */
     void pushWarning( const QString &warning );
 
     /**
-     * Pushes an information string to the dialog's log.
+     * Pushes an information string to the widget's log.
      */
     void pushInfo( const QString &info );
 
     /**
-     * Pushes a pre-formatted message to the dialog's log
+     * Pushes a pre-formatted message to the widget's log
      *
-     * This can be used to push formatted HTML messages to the dialog.
+     * This can be used to push formatted HTML messages to the widget.
      *
      * \since QGIS 3.36
      */
     void pushFormattedMessage( const QString &html );
 
     /**
-     * Pushes a debug info string to the dialog's log.
+     * Pushes a debug info string to the widget's log.
      */
     void pushDebugInfo( const QString &message );
 
     /**
-     * Pushes command info to the dialog's log.
+     * Pushes command info to the widget's log.
      */
     void pushCommandInfo( const QString &info );
 
     /**
-     * Sets the percentage progress for the dialog, between 0 and 100.
+     * Sets the percentage progress for the widget, between 0 and 100.
      */
     void setPercentage( double percent );
 
@@ -251,13 +256,13 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void setProgressText( const QString &text );
 
     /**
-     * Pushes a console info string to the dialog's log.
+     * Pushes a console info string to the widget's log.
      */
     void pushConsoleInfo( const QString &info );
 
     /**
      * Creates a modal progress dialog showing progress and log messages
-     * from this dialog.
+     * from this widget.
      */
     QDialog *createProgressDialog();
 
@@ -281,9 +286,42 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void copyLogToClipboard();
 
     /**
-     * Switches the dialog to the parameters page.
+     * Switches the widget to the parameters page.
      */
     void showParameters();
+
+    /**
+     * Returns TRUE if the widget is currently running an algorithm.
+     *
+     * If the algorithm has not yet started or has finished executing then FALSE will be returned.
+     *
+     * \note Unlike the isFinalized() method, isRunning() only provides
+     * information about the state of widget and is not tied to the
+     * deletion mechanisms of the widget.
+     *
+     * \see isFinalized()
+     *
+     * \since QGIS 4.2
+     */
+    virtual bool isRunning();
+
+    /**
+     * Cancels any algorithm currently running through the widget.
+     *
+     * \note The cancellation is non-blocking, and may take some time to complete. Some algorithms
+     * ignore cancellation requests entirely. This method returns immediately after requesting
+     * the cancellation, but the algorithm may still be running after return.
+     *
+     * \since QGIS 4.2
+     */
+    void cancel();
+
+    /**
+     * Forces the widget to close by detaching any running task from the widget THEN closing the widget.
+     *
+     * \since QGIS 4.2
+     */
+    void forceClose();
 
     void reject() override;
 
@@ -291,44 +329,44 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void closeEvent( QCloseEvent *e ) override;
 
     /**
-     * Returns the dialog's run button.
+     * Returns the widget's run button.
      */
     QPushButton *runButton();
 
     /**
-     * Returns the dialog's cancel button.
+     * Returns the widget's cancel button.
      */
     QPushButton *cancelButton();
 
     /**
-     * Returns the dialog's change parameters button.
+     * Returns the widget's change parameters button.
      */
     QPushButton *changeParametersButton();
 
     /**
-     * Returns the dialog's button box.
+     * Returns the widget's button box.
      */
     QDialogButtonBox *buttonBox();
 
     /**
-     * Returns the dialog's tab widget.
+     * Returns the widget's tab widget.
      */
     QTabWidget *tabWidget();
 
     /**
-     * Clears any current progress from the dialog.
+     * Clears any current progress from the widget.
      */
     void clearProgress();
 
     /**
-     * Sets whether the algorithm was executed through the dialog.
+     * Sets whether the algorithm was executed through the widget.
      * \see wasExecuted()
      * \see setResults()
      */
     void setExecuted( bool executed );
 
     /**
-     * Sets whether the algorithm was executed through the dialog (no matter the result).
+     * Sets whether the algorithm was executed through the widget (no matter the result).
      */
     void setExecutedAnyResult( bool executedAnyResult );
 
@@ -340,12 +378,12 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void setResults( const QVariantMap &results );
 
     /**
-     * Displays an info \a message in the dialog's log.
+     * Displays an info \a message in the widget's log.
      */
     void setInfo( const QString &message, bool isError = false, bool escapeHtml = true, bool isWarning = false );
 
     /**
-     * Resets the dialog's gui, ready for another algorithm execution.
+     * Resets the widget's GUI, ready for another algorithm execution.
      */
     void resetGui();
 
@@ -373,7 +411,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     virtual void blockAdditionalControlsWhileRunning();
 
     /**
-     * Returns the dialog's message bar.
+     * Returns the widget's message bar.
      */
     QgsMessageBar *messageBar();
 
@@ -383,8 +421,8 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void hideShortHelp();
 
     /**
-     * Sets the current \a task running in the dialog. The task will automatically be started
-     * by the dialog. Ownership of \a task is transferred to the dialog.
+     * Sets the current \a task running in the widget. The task will automatically be started
+     * by the widget. Ownership of \a task is transferred to the widget.
      */
     void setCurrentTask( QgsProcessingAlgRunnerTask *task SIP_TRANSFER );
 
@@ -395,7 +433,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     static QString formatStringForLog( const QString &string );
 
     /**
-     * Returns TRUE if the dialog is all finalized and can be safely deleted.
+     * Returns TRUE if the widget is all finalized and can be safely deleted.
      *
      * \since QGIS 3.26
      */
@@ -404,7 +442,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     /**
      * Applies any defined overrides for Processing context settings to the specified \a context.
      *
-     * This allows the dialog to override default Processing settings for an individual algorithm execution.
+     * This allows the widget to override default Processing settings for an individual algorithm execution.
      *
      * \since QGIS 3.32
      */
@@ -422,11 +460,19 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void algorithmAboutToRun( QgsProcessingContext *context );
 
     /**
-     * Emitted whenever an algorithm has finished executing in the dialog.
+     * Emitted whenever an algorithm has finished executing in the widget.
      *
      * \since QGIS 3.14
      */
     void algorithmFinished( bool successful, const QVariantMap &result );
+
+    /**
+     * Emitted when the widget requests that the algorithm is canceled.
+     *
+     * \note Not available in Python bindings
+     * \since QGIS 4.2
+     */
+    SIP_SKIP void cancelRequested();
 
   protected slots:
 
@@ -436,7 +482,7 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     virtual void finished( bool successful, const QVariantMap &result, QgsProcessingContext &context, QgsProcessingFeedback *feedback );
 
     /**
-     * Called when the dialog's algorithm should be run. Must be overridden by subclasses.
+     * Called when the widget's algorithm should be run. Must be overridden by subclasses.
      */
     virtual void runAlgorithm();
 
@@ -460,7 +506,15 @@ class GUI_EXPORT QgsProcessingAlgorithmDialogBase : public QDialog, public QgsPr
     void urlClicked( const QUrl &url );
 
   private:
-    DialogMode mMode = DialogMode::Single;
+    /**
+     * Disconnects from the current task running in the widget.
+     *
+     * The task will continue to execute in the task manager, but the widget
+     * will no longer respond to it.
+     */
+    void disconnectCurrentTask();
+
+    WidgetMode mMode = WidgetMode::Single;
 
     QPushButton *mButtonRun = nullptr;
     QPushButton *mButtonClose = nullptr;
@@ -602,4 +656,4 @@ class GUI_EXPORT QgsProcessingContextOptionsWidget : public QgsPanelWidget, priv
 
 ///@endcond
 
-#endif // QGSPROCESSINGALGORITHMDIALOGBASE_H
+#endif // QGSPROCESSINGALGORITHMWIDGETBASE_H

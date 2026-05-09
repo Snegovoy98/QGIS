@@ -7790,6 +7790,25 @@ Qgis.MaterialRenderingTechnique.__doc__ = """Material rendering techniques.
 # --
 Qgis.MaterialRenderingTechnique.baseClass = Qgis
 # monkey patching scoped based enum
+Qgis.TextureFilterQuality.Trilinear.__doc__ = "Trilinear (LinearMipmapLinear)"
+Qgis.TextureFilterQuality.Anisotropic2x.__doc__ = "Anisotropic filtering (2x)"
+Qgis.TextureFilterQuality.Anisotropic4x.__doc__ = "Anisotropic filtering (4x)"
+Qgis.TextureFilterQuality.Anisotropic8x.__doc__ = "Anisotropic filtering (8x)"
+Qgis.TextureFilterQuality.Anisotropic16x.__doc__ = "Anisotropic filtering (16x)"
+Qgis.TextureFilterQuality.__doc__ = """Texture filtering qualities.
+
+.. versionadded:: 4.2
+
+* ``Trilinear``: Trilinear (LinearMipmapLinear)
+* ``Anisotropic2x``: Anisotropic filtering (2x)
+* ``Anisotropic4x``: Anisotropic filtering (4x)
+* ``Anisotropic8x``: Anisotropic filtering (8x)
+* ``Anisotropic16x``: Anisotropic filtering (16x)
+
+"""
+# --
+Qgis.TextureFilterQuality.baseClass = Qgis
+# monkey patching scoped based enum
 Qgis.LightSourceType.Point.__doc__ = "Point light source"
 Qgis.LightSourceType.Directional.__doc__ = "Directional light source"
 Qgis.LightSourceType.__doc__ = """Light source types for 3D scenes.
@@ -7803,16 +7822,20 @@ Qgis.LightSourceType.__doc__ = """Light source types for 3D scenes.
 # --
 Qgis.LightSourceType.baseClass = Qgis
 # monkey patching scoped based enum
-Qgis.SkyboxType.DistinctTextures.__doc__ = "Cube map built from distinct textures"
-Qgis.SkyboxType.__doc__ = """Skybox types for 3D scenes.
+Qgis.Map3DBackgroundType.NoBackground.__doc__ = "No background"
+Qgis.Map3DBackgroundType.FixedGradientBackground.__doc__ = "Two color gradient, fixed in place"
+Qgis.Map3DBackgroundType.DistinctTextureSkybox.__doc__ = "Skybox with 6 distinct textures for different faces"
+Qgis.Map3DBackgroundType.__doc__ = """Background types for 3D map view.
 
 .. versionadded:: 4.2
 
-* ``DistinctTextures``: Cube map built from distinct textures
+* ``NoBackground``: No background
+* ``FixedGradientBackground``: Two color gradient, fixed in place
+* ``DistinctTextureSkybox``: Skybox with 6 distinct textures for different faces
 
 """
 # --
-Qgis.SkyboxType.baseClass = Qgis
+Qgis.Map3DBackgroundType.baseClass = Qgis
 # monkey patching scoped based enum
 Qgis.SkyboxCubeMapping.NativeZUp.__doc__ = "Textures exported for Z-up (+X Right, +Y Forward, +Z Up)"
 Qgis.SkyboxCubeMapping.OpenGLYUp.__doc__ = "Standard OpenGL/WebGL standard (+X Right, +Y Top, -Z Forward)"

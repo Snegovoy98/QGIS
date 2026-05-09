@@ -99,6 +99,9 @@ class TestQgsSfcgal : public QgsTest
     void primitiveCube();
     void toSolid();
     void toPolyhedralSurface();
+    void geometryN_data();
+    void geometryN();
+    void split3D();
 
   private:
     //! Must be called before each render test
@@ -1259,6 +1262,107 @@ void TestQgsSfcgal::toPolyhedralSurface()
   QVERIFY2( sfcgalPolygonZ.sfcgalGeometry() != nullptr, "toPolyhedralSurface, input polygon is NULL" );
   QCOMPARE( sfcgalPolygonZ.wkbType(), Qgis::WkbType::PolygonZ );
   QVERIFY_EXCEPTION_THROWN( sfcgalPolygonZ.toPolyhedralSurface(), QgsSfcgalException );
+}
+
+void TestQgsSfcgal::geometryN_data()
+{
+  QTest::addColumn<QString>( "wkt" );
+  QTest::addColumn<unsigned int>( "partCount" );
+  QTest::addColumn<QString>( "firstGeomWkt" );
+
+  QTest::newRow( "point z" ) << u"POINT Z (30 10 2)"_s << 1u << u"POINT Z (30 10 2)"_s;
+
+  QTest::newRow( "linestring z" ) << u"LINESTRING Z (0 0 2,10 10 2,20 0 2)"_s << 3u << u"LINESTRING Z (0 0 2,10 10 2,20 0 2)"_s;
+
+  QTest::newRow( "polygon z no hole" ) << u"POLYGON Z ((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0))"_s << 1u << u"POLYGON Z ((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0))"_s;
+
+  QTest::newRow( "polygon z with hole" ) << u"POLYGON Z ((0 0 2,10 0 2,10 10 2,0 10 2,0 0 2),(2 2 2,8 2 2,8 8 2,2 8 2,2 2 2))"_s << 2u << u"POLYGON Z ((0 0 2,10 0 2,10 10 2,0 10 2,0 0 2),(2 2 2,8 2 2,8 8 2,2 8 2,2 2 2))"_s;
+
+  QTest::newRow( "multipoint z" ) << u"MULTIPOINT Z ((10 40 1),(40 30 3),(20 20 -2),(30 10 7))"_s << 4u << u"POINT Z (10 40 1)"_s;
+
+  QTest::newRow( "multilinestring z" ) << u"MULTILINESTRING Z ((10 10 2,20 20 2),(15 15 7,30 15 8))"_s << 2u << u"LINESTRING Z (10 10 2,20 20 2)"_s;
+
+  QTest::newRow( "multipolygon z" ) << u"MULTIPOLYGON Z (((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0)))"_s << 1u << u"POLYGON Z ((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0))"_s;
+
+  QTest::newRow( "geometrycollection z" ) << u"GEOMETRYCOLLECTION Z (POINT Z (10 10 7),LINESTRING Z (20 20 3,30 30 5))"_s << 2u << u"POINT Z (10 10 7)"_s;
+
+  QTest::newRow( "triangle z" ) << u"TRIANGLE Z ((0 0 3,10 0 3,5 10 3,0 0 3))"_s << 3u << u"TRIANGLE Z ((0 0 3,10 0 3,5 10 3,0 0 3))"_s;
+
+  QTest::newRow( "tin z" ) << u"TIN Z (((0 0 2,10 0 2,5 10 2,0 0 2)),((10 0 2,20 0 2,15 10 2,10 0 2)))"_s << 2u << u"TIN Z (((0 0 2,10 0 2,5 10 2,0 0 2)),((10 0 2,20 0 2,15 10 2,10 0 2)))"_s;
+
+  QTest::newRow( "polyhedralsurface z" )
+    << u"POLYHEDRALSURFACE Z (((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0)),((0 0 0,10 0 0,5 5 0,0 0 0)))"_s
+    << 2u
+    << u"POLYHEDRALSURFACE Z (((0 0 0,10 0 0,10 10 0,0 10 0,0 0 0)),((0 0 0,10 0 0,5 5 0,0 0 0)))"_s;
+}
+
+void TestQgsSfcgal::geometryN()
+{
+  QFETCH( QString, wkt );
+  QFETCH( unsigned int, partCount );
+  QFETCH( QString, firstGeomWkt );
+
+  QgsSfcgalGeometry geom( wkt );
+  QVERIFY( !geom.isEmpty() );
+  QCOMPARE( geom.partCount(), partCount );
+
+  std::unique_ptr<QgsSfcgalGeometry> subGeom = geom.geometryN( 0 );
+  QCOMPARE( subGeom->asWkt( 0 ), firstGeomWkt );
+
+  // singular geometry
+  // index > 0 is invalid
+  const bool isSingular = ( wkt == firstGeomWkt );
+  if ( isSingular )
+  {
+    QVERIFY_EXCEPTION_THROWN( geom.geometryN( 1 ), QgsSfcgalException );
+  }
+  else
+  {
+    if ( partCount > 1 )
+    {
+      std::unique_ptr<QgsSfcgalGeometry> lastGeom = geom.geometryN( partCount - 1 );
+      QVERIFY( lastGeom );
+    }
+    else
+    {
+      QVERIFY_EXCEPTION_THROWN( geom.geometryN( 1 ), QgsSfcgalException );
+    }
+  }
+}
+
+void TestQgsSfcgal::split3D()
+{
+#if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  std::unique_ptr<QgsSfcgalGeometry> cube = QgsSfcgalGeometry::createCube( 5 );
+  QCOMPARE( cube->wkbType(), Qgis::WkbType::PolyhedralSurfaceZ );
+  QCOMPARE( cube->geometryType(), "cube" );
+
+  std::unique_ptr<QgsSfcgalGeometry> poly = cube->primitiveAsPolyhedralSurface();
+
+  const QgsPoint planePoint( 0.0, 0.0, 0.0 );
+  const QgsVector3D planeNormal( 1.0, 0.0, -1.0 );
+
+  std::unique_ptr<QgsSfcgalGeometry> splitCube = poly->split3D( planePoint, planeNormal, true );
+  QCOMPARE( splitCube->wkbType(), Qgis::WkbType::GeometryCollectionZ );
+  QCOMPARE( splitCube->partCount(), 2 );
+
+  std::unique_ptr<QgsSfcgalGeometry> firstPart = splitCube->geometryN( 0 );
+  const QString expectedFirstPartWkt = "POLYHEDRALSURFACE Z (((5.0 0.0 5.0,5.0 5.0 5.0,0.0 5.0 5.0,0.0 0.0 5.0,5.0 0.0 5.0)),"
+                                       "((5.0 0.0 5.0,0.0 0.0 5.0,0.0 0.0 0.0,2.5 0.0 2.5,5.0 0.0 5.0)),"
+                                       "((0.0 5.0 5.0,5.0 5.0 5.0,0.0 5.0 0.0,0.0 5.0 5.0)),"
+                                       "((0.0 0.0 0.0,0.0 5.0 0.0,5.0 5.0 5.0,5.0 0.0 5.0,2.5 0.0 2.5,0.0 0.0 0.0)),"
+                                       "((0.0 5.0 0.0,0.0 0.0 0.0,0.0 0.0 5.0,0.0 5.0 5.0,0.0 5.0 0.0)))";
+
+
+  std::unique_ptr<QgsSfcgalGeometry> secondPart = splitCube->geometryN( 1 );
+  const QString expectedSecondPartWkt = "POLYHEDRALSURFACE Z (((0.0 0.0 0.0,0.0 5.0 0.0,5.0 5.0 0.0,5.0 0.0 0.0,0.0 0.0 0.0)),"
+                                        "((0.0 0.0 0.0,5.0 0.0 0.0,5.0 0.0 5.0,2.5 0.0 2.5,0.0 0.0 0.0)),"
+                                        "((5.0 5.0 0.0,0.0 5.0 0.0,5.0 5.0 5.0,5.0 5.0 0.0)),"
+                                        "((5.0 0.0 0.0,5.0 5.0 0.0,5.0 5.0 5.0,5.0 0.0 5.0,5.0 0.0 0.0)),"
+                                        "((0.0 5.0 0.0,0.0 0.0 0.0,2.5 0.0 2.5,5.0 0.0 5.0,5.0 5.0 5.0,0.0 5.0 0.0)))";
+  QCOMPARE( secondPart->asWkt( 1 ), expectedSecondPartWkt );
+
+#endif
 }
 
 QGSTEST_MAIN( TestQgsSfcgal )

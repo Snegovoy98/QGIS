@@ -33,18 +33,18 @@ from qgis.core import (
 )
 from qgis.gui import (
     QgsGui,
-    QgsProcessingAlgorithmDialogBase,
+    QgsProcessingAlgorithmWidgetBase,
     QgsProcessingContextGenerator,
     QgsProcessingParametersGenerator,
 )
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QColor, QPalette
-from qgis.PyQt.QtWidgets import QDialogButtonBox, QMessageBox, QPushButton
+from qgis.PyQt.QtWidgets import QDialogButtonBox, QMessageBox, QPushButton, QWidget
 from qgis.utils import iface
 
+from processing.core.exceptions import InvalidOutputExtension, InvalidParameterValue
 from processing.core.ProcessingConfig import ProcessingConfig
 from processing.core.ProcessingResults import resultsList
-from processing.gui.AlgorithmDialogBase import AlgorithmDialogBase
 from processing.gui.AlgorithmExecutor import execute, execute_in_place, executeIterating
 from processing.gui.BatchAlgorithmDialog import BatchAlgorithmDialog
 from processing.gui.ParametersPanel import ParametersPanel
@@ -52,7 +52,11 @@ from processing.gui.Postprocessing import handleAlgorithmResults
 from processing.tools import dataobjects
 
 
-class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
+class AlgorithmWidget(QgsProcessingAlgorithmWidgetBase):
+    """
+    QgsProcessingAlgorithmWidgetBase with python specific logic
+    """
+
     def __init__(self, alg, in_place=False, parent=None):
         super().__init__(parent)
 
@@ -64,6 +68,8 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
         self.feedback = None
         self.history_log_id = None
         self.history_details = {}
+
+        self._is_running = False
 
         self.setAlgorithm(alg)
         self.setMainWidget(self.getParametersPanel(alg, self))
@@ -126,7 +132,7 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
     def setParameters(self, parameters):
         self.mainWidget().setParameters(parameters)
 
-    def flag_invalid_parameter_value(self, message: str, widget):
+    def flag_invalid_parameter_value(self, message: str, widget: QWidget):
         """
         Highlights a parameter with an invalid value
         """
@@ -145,7 +151,7 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
             duration=5,
         )
 
-    def flag_invalid_output_extension(self, message: str, widget):
+    def flag_invalid_output_extension(self, message: str, widget: QWidget):
         """
         Highlights a parameter with an invalid output extension
         """
@@ -169,9 +175,9 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
 
         try:
             return self.mainWidget().createProcessingParameters(flags)
-        except AlgorithmDialogBase.InvalidParameterValue as e:
+        except InvalidParameterValue as e:
             self.flag_invalid_parameter_value(e.parameter.description(), e.widget)
-        except AlgorithmDialogBase.InvalidOutputExtension as e:
+        except InvalidOutputExtension as e:
             self.flag_invalid_output_extension(e.message, e.widget)
         return {}
 
@@ -226,6 +232,7 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
             self.cancelButton().setEnabled(False)
 
             self.iterateParam = None
+            self._is_running = True
 
             for param in self.algorithm().parameterDefinitions():
                 if (
@@ -428,9 +435,9 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
                     self.proxy_progress.finalize(ok)
                     on_complete(ok, results)
 
-        except AlgorithmDialogBase.InvalidParameterValue as e:
+        except InvalidParameterValue as e:
             self.flag_invalid_parameter_value(e.parameter.description(), e.widget)
-        except AlgorithmDialogBase.InvalidOutputExtension as e:
+        except InvalidOutputExtension as e:
             self.flag_invalid_output_extension(e.message, e.widget)
 
     def finish(self, successful, result, context, feedback, in_place=False):
@@ -458,6 +465,7 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
                 self.resetGui()
                 return
 
+        self._is_running = False
         self.setExecuted(True)
         self.setResults(result)
         self.setInfo(
@@ -478,3 +486,6 @@ class AlgorithmDialog(QgsProcessingAlgorithmDialogBase):
                     ),
                     escapeHtml=False,
                 )
+
+    def isRunning(self):
+        return self._is_running

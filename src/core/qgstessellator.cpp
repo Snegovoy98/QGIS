@@ -781,9 +781,22 @@ void QgsTessellator::addPolygon( const QgsPolygon &polygon, float extrusionHeigh
   if ( !mInputZValueIgnored && !qgsDoubleNear( pNormal.length(), 1, 0.001 ) )
     return; // this should not happen - pNormal should be normalized to unit length
 
-  const bool buildWalls = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Walls );
-  const bool buildFloor = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Floor );
-  const bool buildRoof = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Roof );
+  bool buildWalls = false;
+  bool buildFloor = false;
+  bool buildRoof = false;
+  if ( qgsDoubleNear( extrusionHeight, 0 ) )
+  {
+    // no extrusion -- if either floor or roof are enabled, we just build the roof. These two surfaces would otherwise
+    // be identical
+    buildRoof = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Floor ) || mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Roof );
+  }
+  else
+  {
+    // extrusion
+    buildWalls = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Walls );
+    buildFloor = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Floor );
+    buildRoof = mExtrusionFaces.testFlag( Qgis::ExtrusionFace::Roof );
+  }
 
   if ( buildFloor || buildRoof )
   {
@@ -804,21 +817,24 @@ void QgsTessellator::addPolygon( const QgsPolygon &polygon, float extrusionHeigh
       const QVector3D p3( static_cast<float>( triangle->xAt( 2 ) ), static_cast<float>( triangle->yAt( 2 ) ), static_cast<float>( triangle->zAt( 2 ) ) );
       std::array<QVector3D, 3> points = { p1, p2, p3 };
 
-      for ( const QVector3D &point : points )
+      if ( buildRoof )
       {
-        addVertex( point, normal, frontTangent, extrusionHeight, &base, &extrusionOrigin );
-      }
-
-      if ( mAddBackFaces )
-      {
-        for ( size_t i = points.size(); i-- > 0; )
+        for ( const QVector3D &point : points )
         {
-          const QVector3D &point = points[i];
-          addVertex( point, -normal, backTangent, extrusionHeight, &base, &extrusionOrigin );
+          addVertex( point, normal, frontTangent, extrusionHeight, &base, &extrusionOrigin );
+        }
+
+        if ( mAddBackFaces )
+        {
+          for ( size_t i = points.size(); i-- > 0; )
+          {
+            const QVector3D &point = points[i];
+            addVertex( point, -normal, backTangent, extrusionHeight, &base, &extrusionOrigin );
+          }
         }
       }
 
-      if ( extrusionHeight != 0 && buildFloor )
+      if ( buildFloor )
       {
         for ( const QVector3D &point : points )
         {
@@ -894,21 +910,24 @@ void QgsTessellator::addPolygon( const QgsPolygon &polygon, float extrusionHeigh
           const std::array<QVector3D, 3> points = { trianglePoints[i + 0], trianglePoints[i + 1], trianglePoints[i + 2] };
 
           // roof
-          for ( const QVector3D &point : points )
+          if ( buildRoof )
           {
-            addVertex( point, normal, frontTangent, extrusionHeight, &base, &extrusionOrigin, &vertexBuffer, vertexBufferSize );
-          }
-
-          if ( mAddBackFaces )
-          {
-            for ( size_t i = points.size(); i-- > 0; )
+            for ( const QVector3D &point : points )
             {
-              const QVector3D &point = points[i];
-              addVertex( point, -normal, backTangent, extrusionHeight, &base, &extrusionOrigin, &vertexBuffer, vertexBufferSize );
+              addVertex( point, normal, frontTangent, extrusionHeight, &base, &extrusionOrigin, &vertexBuffer, vertexBufferSize );
+            }
+
+            if ( mAddBackFaces )
+            {
+              for ( size_t i = points.size(); i-- > 0; )
+              {
+                const QVector3D &point = points[i];
+                addVertex( point, -normal, backTangent, extrusionHeight, &base, &extrusionOrigin, &vertexBuffer, vertexBufferSize );
+              }
             }
           }
 
-          if ( extrusionHeight != 0 && buildFloor )
+          if ( buildFloor )
           {
             for ( const QVector3D &point : points )
             {
@@ -938,7 +957,7 @@ void QgsTessellator::addPolygon( const QgsPolygon &polygon, float extrusionHeigh
   }
 
   // add walls if extrusion is enabled
-  if ( extrusionHeight != 0 && buildWalls )
+  if ( buildWalls )
   {
     makeWalls( *exterior, false, extrusionHeight );
     for ( int i = 0; i < polygon.numInteriorRings(); ++i )

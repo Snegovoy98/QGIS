@@ -26,7 +26,6 @@ from qgis.core import (
 )
 from qgis.gui import (
     QgsMessageBar,
-    QgsProcessingAlgorithmDialogBase,
     QgsProcessingLayerOutputDestinationWidget,
     QgsProjectionSelectionWidget,
 )
@@ -44,8 +43,8 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from processing.gui.AlgorithmDialog import AlgorithmDialog
-from processing.gui.AlgorithmDialogBase import AlgorithmDialogBase
+from processing.core.exceptions import InvalidOutputExtension, InvalidParameterValue
+from processing.gui.algorithm_widget import AlgorithmWidget
 from processing.gui.MultipleInputPanel import MultipleInputPanel
 from processing.gui.NumberInputPanel import NumberInputPanel
 from processing.gui.ParametersPanel import ParametersPanel
@@ -53,7 +52,11 @@ from processing.gui.wrappers import WidgetWrapper
 from processing.tools.dataobjects import createContext
 
 
-class GdalAlgorithmDialog(AlgorithmDialog):
+class GdalAlgorithmWidget(AlgorithmWidget):
+    """
+    Custom algorithm widget for showing GDAL command line arguments
+    """
+
     def __init__(self, alg, parent=None):
         super().__init__(alg, parent=parent)
         self.mainWidget().parametersHaveChanged()
@@ -162,11 +165,11 @@ class GdalParametersPanel(ParametersPanel):
                 self.text.setPlainText(" ".join(commands))
             except QgsProcessingException as e:
                 self.text.setPlainText(str(e))
-        except AlgorithmDialogBase.InvalidParameterValue as e:
+        except InvalidParameterValue as e:
             self.text.setPlainText(
                 self.tr("Invalid value for parameter '{0}'").format(
                     e.parameter.description()
                 )
             )
-        except AlgorithmDialogBase.InvalidOutputExtension as e:
+        except InvalidOutputExtension as e:
             self.text.setPlainText(e.message)

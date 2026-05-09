@@ -15,6 +15,7 @@
 
 #include "qgs3dutils.h"
 
+#include "qgs3d.h"
 #include "qgs3dmapcanvas.h"
 #include "qgs3dmapscene.h"
 #include "qgsabstract3dengine.h"
@@ -29,6 +30,7 @@
 #include "qgsfeedback.h"
 #include "qgsglobechunkedentity.h"
 #include "qgslinestring.h"
+#include "qgsmaterial3dhandler.h"
 #include "qgsoffscreen3dengine.h"
 #include "qgspointcloud3dsymbol.h"
 #include "qgspointcloudattributebyramprenderer.h"
@@ -1230,4 +1232,30 @@ std::unique_ptr<Qt3DRender::QCamera> Qgs3DUtils::copyCamera( Qt3DRender::QCamera
   copy->setAspectRatio( cam->aspectRatio() );
   copy->setFieldOfView( cam->fieldOfView() );
   return copy;
+}
+
+void Qgs3DUtils::setTextureFiltering( Qt3DRender::QAbstractTexture *texture, const QgsMaterialContext &context )
+{
+  texture->setGenerateMipMaps( true );
+  texture->setMagnificationFilter( Qt3DRender::QTexture2D::Linear );
+  texture->setMinificationFilter( Qt3DRender::QTexture2D::LinearMipMapLinear );
+
+  switch ( context.textureFilterQuality() )
+  {
+    case Qgis::TextureFilterQuality::Trilinear:
+      texture->setMaximumAnisotropy( 1 );
+      break;
+    case Qgis::TextureFilterQuality::Anisotropic2x:
+      texture->setMaximumAnisotropy( 2 );
+      break;
+    case Qgis::TextureFilterQuality::Anisotropic4x:
+      texture->setMaximumAnisotropy( 4 );
+      break;
+    case Qgis::TextureFilterQuality::Anisotropic8x:
+      texture->setMaximumAnisotropy( 8 );
+      break;
+    case Qgis::TextureFilterQuality::Anisotropic16x:
+      texture->setMaximumAnisotropy( 16 );
+      break;
+  }
 }
