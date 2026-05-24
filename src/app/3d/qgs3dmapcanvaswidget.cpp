@@ -35,6 +35,7 @@
 #include "qgs3dutils.h"
 #include "qgsannotationlayer.h"
 #include "qgsapplication.h"
+#include "qgsbloomsettings.h"
 #include "qgscameracontroller.h"
 #include "qgscrosssection.h"
 #include "qgscurve.h"
@@ -372,6 +373,15 @@ Qgs3DMapCanvasWidget::Qgs3DMapCanvasWidget( const QString &name, bool isDocked )
   } );
   mEffectsMenu->addAction( mActionEnableAmbientOcclusion );
 
+  mActionEnableBloom = new QAction( tr( "Show Bloom Lighting Effect" ), this );
+  mActionEnableBloom->setCheckable( true );
+  connect( mActionEnableBloom, &QAction::triggered, this, [this]( bool enabled ) {
+    QgsBloomSettings bloomSettings = mCanvas->mapSettings()->bloomSettings();
+    bloomSettings.setEnabled( enabled );
+    mCanvas->mapSettings()->setBloomSettings( bloomSettings );
+  } );
+  mEffectsMenu->addAction( mActionEnableBloom );
+
   // Options Menu
   QAction *configureAction = new QAction( QgsApplication::getThemeIcon( u"mActionOptions.svg"_s ), tr( "Configure…" ), this );
   connect( configureAction, &QAction::triggered, this, &Qgs3DMapCanvasWidget::configure );
@@ -468,7 +478,7 @@ Qgs3DMapCanvasWidget::Qgs3DMapCanvasWidget( const QString &name, bool isDocked )
   onTotalPendingJobsCountChanged();
 
   mDockableWidgetHelper
-    = new QgsDockableWidgetHelper( mCanvasName, this, QgisApp::instance(), mCanvasName, QStringList(), isDocked ? QgsDockableWidgetHelper::OpeningMode::ForceDocked : QgsDockableWidgetHelper::OpeningMode::RespectSetting );
+    = new QgsDockableWidgetHelper( mCanvasName, this, QgisApp::instance(), mCanvasName, QStringList(), isDocked ? Qgis::DockableWidgetInitialState::ForceDocked : Qgis::DockableWidgetInitialState::RestorePreviousState );
 
   if ( QDialog *dialog = mDockableWidgetHelper->dialog() )
   {
@@ -1410,6 +1420,7 @@ void Qgs3DMapCanvasWidget::updateCheckedActionsFromMapSettings( const Qgs3DMapSe
   whileBlocking( mActionEnableShadows )->setChecked( mapSettings->shadowSettings().renderShadows() );
   whileBlocking( mActionEnableEyeDome )->setChecked( mapSettings->eyeDomeLightingEnabled() );
   whileBlocking( mActionEnableAmbientOcclusion )->setChecked( mapSettings->ambientOcclusionSettings().isEnabled() );
+  whileBlocking( mActionEnableBloom )->setChecked( mapSettings->bloomSettings().isEnabled() );
   whileBlocking( mActionSync2DNavTo3D )->setChecked( mapSettings->viewSyncMode().testFlag( Qgis::ViewSyncModeFlag::Sync2DTo3D ) );
   whileBlocking( mActionSync3DNavTo2D )->setChecked( mapSettings->viewSyncMode().testFlag( Qgis::ViewSyncModeFlag::Sync3DTo2D ) );
   whileBlocking( mShowFrustumPolygon )->setChecked( mapSettings->viewFrustumVisualizationEnabled() );

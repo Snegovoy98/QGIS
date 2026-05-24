@@ -96,8 +96,19 @@ class _3D_EXPORT QgsMetalRoughMaterial : public QgsMaterial
      */
     void setEmissionTexture( Qt3DRender::QAbstractTexture *emission );
 
+    /**
+     * Sets the solid emissive \a color.
+     */
+    void setEmissionColor( const QColor &color );
+
     //! Sets the emission strength factor
     void setEmissionFactor( double factor );
+
+    /**
+     * When instancing is enabled, the vertex shader uses per-instance
+     * translation, rotation, and scale attributes for GPU instancing.
+     */
+    void setInstancingEnabled( bool enabled );
 
     void setTextureScale( float textureScale );
     void setTextureRotation( float textureRotation );
@@ -105,10 +116,17 @@ class _3D_EXPORT QgsMetalRoughMaterial : public QgsMaterial
 
     void setOpacity( float opacity );
 
+    /**
+     * Switches between data-defined (per-vertex attribute) and uniform color mode.
+     * When \a enabled is TRUE, the metalroughDataDefined.vert shader is used and
+     * the DATA_DEFINED define is injected into the fragment shader.
+     */
+    void setDataDefinedEnabled( bool enabled );
+
   private:
     void init();
 
-    void updateFragmentShader();
+    void updateShaders();
 
     Qt3DRender::QParameter *mBaseColorParameter = nullptr;
     Qt3DRender::QParameter *mMetalnessParameter = nullptr;
@@ -121,6 +139,7 @@ class _3D_EXPORT QgsMetalRoughMaterial : public QgsMaterial
     Qt3DRender::QParameter *mHeightMapParameter = nullptr;
     Qt3DRender::QParameter *mParallaxScaleParameter = nullptr;
     Qt3DRender::QParameter *mEmissionMapParameter = nullptr;
+    Qt3DRender::QParameter *mEmissiveColorParameter = nullptr;
     Qt3DRender::QParameter *mEmissionFactorParameter = nullptr;
     Qt3DRender::QParameter *mTextureScaleParameter = nullptr;
     Qt3DRender::QParameter *mTextureRotationParameter = nullptr;
@@ -138,6 +157,9 @@ class _3D_EXPORT QgsMetalRoughMaterial : public QgsMaterial
     bool mUsingHeightMap = false;
     bool mUsingEmissionMap = false;
     bool mFlatShading = false;
+    bool mInstancingEnabled = false;
+
+    bool mDataDefinedEnabled = false;
 
     friend class TestQgsGltf3DUtils;
 };

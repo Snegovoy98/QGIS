@@ -245,6 +245,28 @@ class CORE_EXPORT QgsMetalRoughTexturedMaterialSettings : public QgsAbstractMate
     void readXml( const QDomElement &elem, const QgsReadWriteContext &context ) override;
     void writeXml( QDomElement &elem, const QgsReadWriteContext &context ) const override;
 
+    /**
+     * Returns an approximate color representing the blended material color.
+     *
+     * This function returns an approximation of the
+     * material's appearance based on the average color of the base color texture and the
+     * emission texture.
+     * Other texture maps are not taken into account.
+     */
+    QColor averageColor() const override;
+
+    /**
+     * Decomposes a base color into the material's color components, and sets the material's colors accordingly.
+     *
+     * This method has no effect for QgsMetalRoughTexturedMaterialSettings, as the material
+     * is fully defined by texture maps.
+     *
+     * \param baseColor The color to decompose (ignored)
+     *
+     * \since QGIS 4.2
+     */
+    void setColorsFromBase( const QColor &baseColor ) override;
+
     bool operator==( const QgsMetalRoughTexturedMaterialSettings &other ) const
     {
       return mBaseColorTexturePath == other.mBaseColorTexturePath
@@ -263,6 +285,9 @@ class CORE_EXPORT QgsMetalRoughTexturedMaterialSettings : public QgsAbstractMate
     }
 
   private:
+    QColor textureAverageColor( const QString &texturePath ) const;
+
+  private:
     QString mBaseColorTexturePath;
     QString mMetalnessTexturePath;
     QString mRoughnessTexturePath;
@@ -278,6 +303,8 @@ class CORE_EXPORT QgsMetalRoughTexturedMaterialSettings : public QgsAbstractMate
     double mTextureScale { 1.0 };
     double mTextureRotation { 0.0 };
     double mOpacity { 1.0 };
+
+    mutable std::optional<QColor> mAverageColor;
 };
 
 

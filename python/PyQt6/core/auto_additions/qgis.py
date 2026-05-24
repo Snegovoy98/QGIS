@@ -843,33 +843,39 @@ Qgis.EmbeddedScriptMode.__doc__ = """Authorisation to run script embedded in pro
 # --
 Qgis.EmbeddedScriptMode.baseClass = Qgis
 # monkey patching scoped based enum
-Qgis.EmbeddedScriptType.Macro.__doc__ = ""
-Qgis.EmbeddedScriptType.ExpressionFunction.__doc__ = ""
-Qgis.EmbeddedScriptType.Action.__doc__ = ""
-Qgis.EmbeddedScriptType.FormInitCode.__doc__ = ""
+Qgis.EmbeddedScriptType.Macro.__doc__ = "Project macros"
+Qgis.EmbeddedScriptType.ExpressionFunction.__doc__ = "Expression functions"
+Qgis.EmbeddedScriptType.Action.__doc__ = "Map layers' action \n.. versionadded:: 4.0"
+Qgis.EmbeddedScriptType.FormInitCode.__doc__ = "Attribute forms' initiation code \n.. versionadded:: 4.0"
 Qgis.EmbeddedScriptType.__doc__ = """Type of Python Embedded in projects
 
 .. versionadded:: 3.40
 
-* ``Macro``: 
-* ``ExpressionFunction``: 
-* ``Action``: 
-* ``FormInitCode``: 
+* ``Macro``: Project macros
+* ``ExpressionFunction``: Expression functions
+* ``Action``: Map layers' action
+
+  .. versionadded:: 4.0
+
+* ``FormInitCode``: Attribute forms' initiation code
+
+  .. versionadded:: 4.0
+
 
 """
 # --
 Qgis.EmbeddedScriptType.baseClass = Qgis
 # monkey patching scoped based enum
-Qgis.ProjectTrustStatus.Undetermined.__doc__ = ""
-Qgis.ProjectTrustStatus.Trusted.__doc__ = ""
-Qgis.ProjectTrustStatus.Untrusted.__doc__ = ""
+Qgis.ProjectTrustStatus.Undetermined.__doc__ = "The project trust has not yet been determined by the user"
+Qgis.ProjectTrustStatus.Trusted.__doc__ = "The project has been determined by the user as trusted"
+Qgis.ProjectTrustStatus.Untrusted.__doc__ = "The project has been determined by the user as untrusted"
 Qgis.ProjectTrustStatus.__doc__ = """Project trust status
 
 .. versionadded:: 4.0
 
-* ``Undetermined``: 
-* ``Trusted``: 
-* ``Untrusted``: 
+* ``Undetermined``: The project trust has not yet been determined by the user
+* ``Trusted``: The project has been determined by the user as trusted
+* ``Untrusted``: The project has been determined by the user as untrusted
 
 """
 # --
@@ -7790,6 +7796,22 @@ Qgis.MaterialRenderingTechnique.__doc__ = """Material rendering techniques.
 # --
 Qgis.MaterialRenderingTechnique.baseClass = Qgis
 # monkey patching scoped based enum
+Qgis.InstancedMaterialFlag.DataDefinedScale.__doc__ = "Per-instance data-defined scale"
+Qgis.InstancedMaterialFlag.DataDefinedRotation.__doc__ = "Per-instance data-defined rotation"
+Qgis.InstancedMaterialFlag.__doc__ = """Optional per-instance properties of instanced materials.
+
+.. versionadded:: 4.2
+
+* ``DataDefinedScale``: Per-instance data-defined scale
+* ``DataDefinedRotation``: Per-instance data-defined rotation
+
+"""
+# --
+Qgis.InstancedMaterialFlag.baseClass = Qgis
+Qgis.InstancedMaterialFlags = lambda flags=0: Qgis.InstancedMaterialFlag(flags)
+Qgis.InstancedMaterialFlags.baseClass = Qgis
+InstancedMaterialFlags = Qgis  # dirty hack since SIP seems to introduce the flags in module
+# monkey patching scoped based enum
 Qgis.TextureFilterQuality.Trilinear.__doc__ = "Trilinear (LinearMipmapLinear)"
 Qgis.TextureFilterQuality.Anisotropic2x.__doc__ = "Anisotropic filtering (2x)"
 Qgis.TextureFilterQuality.Anisotropic4x.__doc__ = "Anisotropic filtering (4x)"
@@ -7808,6 +7830,25 @@ Qgis.TextureFilterQuality.__doc__ = """Texture filtering qualities.
 """
 # --
 Qgis.TextureFilterQuality.baseClass = Qgis
+# monkey patching scoped based enum
+Qgis.ShadowQuality.Low.__doc__ = "Low quality"
+Qgis.ShadowQuality.Medium.__doc__ = "Medium quality"
+Qgis.ShadowQuality.High.__doc__ = "High quality"
+Qgis.ShadowQuality.VeryHigh.__doc__ = "Very high quality"
+Qgis.ShadowQuality.Extreme.__doc__ = "Extremely high quality"
+Qgis.ShadowQuality.__doc__ = """Shadow texture quality.
+
+.. versionadded:: 4.2
+
+* ``Low``: Low quality
+* ``Medium``: Medium quality
+* ``High``: High quality
+* ``VeryHigh``: Very high quality
+* ``Extreme``: Extremely high quality
+
+"""
+# --
+Qgis.ShadowQuality.baseClass = Qgis
 # monkey patching scoped based enum
 Qgis.LightSourceType.Point.__doc__ = "Point light source"
 Qgis.LightSourceType.Directional.__doc__ = "Directional light source"
@@ -8460,6 +8501,21 @@ Qgis.LayerTreeInsertionMethod.__doc__ = """Layer tree insertion methods
 """
 # --
 Qgis.LayerTreeInsertionMethod.baseClass = Qgis
+# monkey patching scoped based enum
+Qgis.LegendLayerDoubleClickAction.LayerProperties.__doc__ = "Open the layer properties dialog"
+Qgis.LegendLayerDoubleClickAction.AttributeTable.__doc__ = "Open the attribute table"
+Qgis.LegendLayerDoubleClickAction.LayerStyling.__doc__ = "Open the layer styling dock"
+Qgis.LegendLayerDoubleClickAction.__doc__ = """Action performed when double-clicking a layer in the legend.
+
+.. versionadded:: 4.0
+
+* ``LayerProperties``: Open the layer properties dialog
+* ``AttributeTable``: Open the attribute table
+* ``LayerStyling``: Open the layer styling dock
+
+"""
+# --
+Qgis.LegendLayerDoubleClickAction.baseClass = Qgis
 # monkey patching scoped based enum
 Qgis.LayerTreeFilterFlag.SkipVisibilityCheck.__doc__ = "If set, the standard visibility check should be skipped"
 Qgis.LayerTreeFilterFlag.__doc__ = """Layer tree filter flags.
@@ -12661,6 +12717,40 @@ Qgis.TriangulationAlgorithm.__doc__ = """Triangulation algorithms.
 """
 # --
 Qgis.TriangulationAlgorithm.baseClass = Qgis
+# monkey patching scoped based enum
+Qgis.WmsGroupRequestMode.Normal.__doc__ = "Group and children can be requested"
+Qgis.WmsGroupRequestMode.Opaque.__doc__ = "Group can be requested, children cannot (appears like a single layer)"
+Qgis.WmsGroupRequestMode.__doc__ = """Request mode of groups in a WMS context.
+
+When a group is opaque, WMS treats it as a single opaque layer instead
+of a collection of individual layers.
+Its child layers are hidden from GetCapabilities requests.
+Any direct requests (like GetMap or GetFeatureInfo etc.) for a child layer will result in an error.
+Child layers are rendered whenever a request is made for the group itself.
+
+.. versionadded:: 4.2
+
+* ``Normal``: Group and children can be requested
+* ``Opaque``: Group can be requested, children cannot (appears like a single layer)
+
+"""
+# --
+Qgis.WmsGroupRequestMode.baseClass = Qgis
+# monkey patching scoped based enum
+Qgis.DockableWidgetInitialState.RestorePreviousState.__doc__ = "Restore the previous state of this dock"
+Qgis.DockableWidgetInitialState.ForceDocked.__doc__ = "Force the widget to be docked"
+Qgis.DockableWidgetInitialState.ForceDialog.__doc__ = "Force the widget to be shown in a dialog"
+Qgis.DockableWidgetInitialState.__doc__ = """Dockable widget initial states.
+
+.. versionadded:: 4.2
+
+* ``RestorePreviousState``: Restore the previous state of this dock
+* ``ForceDocked``: Force the widget to be docked
+* ``ForceDialog``: Force the widget to be shown in a dialog
+
+"""
+# --
+Qgis.DockableWidgetInitialState.baseClass = Qgis
 try:
     Qgis.__attribute_docs__ = {'QGIS_DEV_VERSION': 'The development version', 'DEFAULT_SEARCH_RADIUS_MM': 'Identify search radius in mm', 'DEFAULT_MAPTOPIXEL_THRESHOLD': 'Default threshold between map coordinates and device coordinates for map2pixel simplification', 'DEFAULT_HIGHLIGHT_COLOR': 'Default highlight color.  The transparency is expected to only be applied to polygon\nfill. Lines and outlines are rendered opaque.', 'DEFAULT_HIGHLIGHT_BUFFER_MM': 'Default highlight buffer in mm.', 'DEFAULT_HIGHLIGHT_MIN_WIDTH_MM': 'Default highlight line/stroke minimum width in mm.', 'SCALE_PRECISION': 'Fudge factor used to compare two scales. The code is often going from scale to scale\ndenominator. So it looses precision and, when a limit is inclusive, can lead to errors.\nTo avoid that, use this factor instead of using <= or >=.\n\n.. deprecated:: 3.40\n\n   No longer used by QGIS and will be removed in QGIS 5.0.', 'DEFAULT_Z_COORDINATE': 'Default Z coordinate value.\nThis value have to be assigned to the Z coordinate for the vertex.', 'DEFAULT_M_COORDINATE': 'Default M coordinate value.\nThis value have to be assigned to the M coordinate for the vertex.\n\n.. versionadded:: 3.20', 'UI_SCALE_FACTOR': 'UI scaling factor. This should be applied to all widget sizes obtained from font metrics,\nto account for differences in the default font sizes across different platforms.', 'DEFAULT_SNAP_TOLERANCE': 'Default snapping distance tolerance.', 'DEFAULT_SNAP_UNITS': 'Default snapping distance units.', 'USER_CRS_START_ID': 'Minimum ID number for a user-defined projection.', 'DEFAULT_POINT_SIZE': 'The default size (in millimeters) for point marker symbols', 'DEFAULT_LINE_WIDTH': 'The default width (in millimeters) for line symbols', 'DEFAULT_SEGMENT_EPSILON': 'Default snapping tolerance for segments'}
     Qgis.__annotations__ = {'QGIS_DEV_VERSION': str, 'DEFAULT_SEARCH_RADIUS_MM': float, 'DEFAULT_MAPTOPIXEL_THRESHOLD': float, 'DEFAULT_HIGHLIGHT_COLOR': 'QColor', 'DEFAULT_HIGHLIGHT_BUFFER_MM': float, 'DEFAULT_HIGHLIGHT_MIN_WIDTH_MM': float, 'SCALE_PRECISION': float, 'DEFAULT_Z_COORDINATE': float, 'DEFAULT_M_COORDINATE': float, 'UI_SCALE_FACTOR': float, 'DEFAULT_SNAP_TOLERANCE': float, 'DEFAULT_SNAP_UNITS': 'Qgis.MapToolUnit', 'USER_CRS_START_ID': int, 'DEFAULT_POINT_SIZE': float, 'DEFAULT_LINE_WIDTH': float, 'DEFAULT_SEGMENT_EPSILON': float}

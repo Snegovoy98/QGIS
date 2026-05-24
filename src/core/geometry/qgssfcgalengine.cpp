@@ -1111,12 +1111,78 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalEngine::toSfcgalGeometry( sfcgal::sh
   return std::make_unique<QgsSfcgalGeometry>( prim, type );
 }
 
+sfcgal::shared_prim QgsSfcgalEngine::createBox( double sizeX, double sizeY, double sizeZ, QString *errorMsg )
+{
+  sfcgal::primitive *result = sfcgal_primitive_create( SFCGAL_TYPE_BOX );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  sfcgal_primitive_set_parameter_double( result, "x_extent", sizeX );
+  sfcgal_primitive_set_parameter_double( result, "y_extent", sizeY );
+  sfcgal_primitive_set_parameter_double( result, "z_extent", sizeZ );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  return sfcgal::make_shared_prim( result );
+}
+
+sfcgal::shared_prim QgsSfcgalEngine::createCone( double bottomRadius, double height, double topRadius, unsigned int radial, QString *errorMsg )
+{
+  sfcgal::primitive *result = sfcgal_primitive_create( SFCGAL_TYPE_CONE );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  sfcgal_primitive_set_parameter_double( result, "bottom_radius", bottomRadius );
+  sfcgal_primitive_set_parameter_double( result, "height", height );
+  sfcgal_primitive_set_parameter_double( result, "top_radius", topRadius );
+  sfcgal_primitive_set_parameter_int( result, "num_radial", radial );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  return sfcgal::make_shared_prim( result );
+}
+
 sfcgal::shared_prim QgsSfcgalEngine::createCube( double size, QString *errorMsg )
 {
   sfcgal::primitive *result = sfcgal_primitive_create( SFCGAL_TYPE_CUBE );
   CHECK_SUCCESS( errorMsg, nullptr );
 
   sfcgal_primitive_set_parameter_double( result, "size", size );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  return sfcgal::make_shared_prim( result );
+}
+
+sfcgal::shared_prim QgsSfcgalEngine::createCylinder( double radius, double height, unsigned int radial, QString *errorMsg )
+{
+  sfcgal::primitive *result = sfcgal_primitive_create( SFCGAL_TYPE_CYLINDER );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  sfcgal_primitive_set_parameter_double( result, "radius", radius );
+  sfcgal_primitive_set_parameter_double( result, "height", height );
+  sfcgal_primitive_set_parameter_int( result, "num_radial", radial );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  return sfcgal::make_shared_prim( result );
+}
+
+sfcgal::shared_prim QgsSfcgalEngine::createSphere( double radius, unsigned int subdivisions, QString *errorMsg )
+{
+  sfcgal::primitive *result = sfcgal_primitive_create( SFCGAL_TYPE_SPHERE );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  sfcgal_primitive_set_parameter_double( result, "radius", radius );
+  sfcgal_primitive_set_parameter_int( result, "num_subdivisions", subdivisions );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  return sfcgal::make_shared_prim( result );
+}
+
+sfcgal::shared_prim QgsSfcgalEngine::createTorus( double mainRadius, double tubeRadius, unsigned int mainRadial, unsigned int tubeRadial, QString *errorMsg )
+{
+  sfcgal::primitive *result = sfcgal_primitive_create( SFCGAL_TYPE_TORUS );
+  CHECK_SUCCESS( errorMsg, nullptr );
+
+  sfcgal_primitive_set_parameter_double( result, "main_radius", mainRadius );
+  sfcgal_primitive_set_parameter_double( result, "tube_radius", tubeRadius );
+  sfcgal_primitive_set_parameter_int( result, "main_num_radial", mainRadial );
+  sfcgal_primitive_set_parameter_int( result, "tube_num_radial", tubeRadial );
   CHECK_SUCCESS( errorMsg, nullptr );
 
   return sfcgal::make_shared_prim( result );
@@ -1166,24 +1232,55 @@ sfcgal::shared_prim QgsSfcgalEngine::primitiveClone( const sfcgal::primitive *pr
   return sfcgal::make_shared_prim( result );
 }
 
-double QgsSfcgalEngine::primitiveArea( const sfcgal::primitive *prim, bool withDiscretization, QString *errorMsg )
+double QgsSfcgalEngine::primitiveArea( const sfcgal::primitive *prim, const QgsMatrix4x4 &primTransform, bool withDiscretization, QString *errorMsg )
 {
   sfcgal::errorHandler()->clearText( errorMsg );
   CHECK_NOT_NULL( prim, std::numeric_limits<double>::quiet_NaN() );
 
-  double out = sfcgal_primitive_area( prim, withDiscretization );
+  // simple case - no scale
+  if ( primTransform.isIdentity() )
+  {
+    const double area = sfcgal_primitive_area( prim, withDiscretization );
+    CHECK_SUCCESS( errorMsg, std::numeric_limits<double>::quiet_NaN() );
+    return area;
+  }
+
+  double baseArea = 0.0;
+  double scale = 1.0;
+
+  const double scaleX = primTransform.mapVector( QgsVector3D( 1, 0, 0 ) ).x();
+  const double scaleY = primTransform.mapVector( QgsVector3D( 0, 1, 0 ) ).y();
+  const double scaleZ = primTransform.mapVector( QgsVector3D( 0, 0, 1 ) ).z();
+
+  if ( !qgsDoubleNear( scaleX, scaleY ) || !qgsDoubleNear( scaleY, scaleZ ) )
+  {
+    // scale is not uniform - exact computation is not possible
+    // use a polyhedralsurface approximation
+    QgsDebugMsgLevel( u"The primitive has a non-uniform scale. Falling back to polyhedral surface approximation for computation."_s, 2 );
+    sfcgal::shared_geom phs = primitiveAsPolyhedral( prim, primTransform );
+    CHECK_SUCCESS( errorMsg, std::numeric_limits<double>::quiet_NaN() );
+    baseArea = area( phs.get() );
+  }
+  else
+  {
+    // uniform scale - no approximation is needed
+    scale = std::cbrt( std::abs( primTransform.determinant() ) );
+    baseArea = sfcgal_primitive_area( prim, withDiscretization );
+  }
+
   CHECK_SUCCESS( errorMsg, std::numeric_limits<double>::quiet_NaN() );
-  return out;
+  return baseArea * scale * scale;
 }
 
-double QgsSfcgalEngine::primitiveVolume( const sfcgal::primitive *prim, bool withDiscretization, QString *errorMsg )
+double QgsSfcgalEngine::primitiveVolume( const sfcgal::primitive *prim, const QgsMatrix4x4 &primTransform, bool withDiscretization, QString *errorMsg )
 {
   sfcgal::errorHandler()->clearText( errorMsg );
   CHECK_NOT_NULL( prim, std::numeric_limits<double>::quiet_NaN() );
 
-  double out = sfcgal_primitive_volume( prim, withDiscretization );
+  const double baseVolume = sfcgal_primitive_volume( prim, withDiscretization );
   CHECK_SUCCESS( errorMsg, std::numeric_limits<double>::quiet_NaN() );
-  return out;
+
+  return primTransform.isIdentity() ? baseVolume : baseVolume * std::abs( primTransform.determinant() );
 }
 
 void sfcgal::to_json( json &j, const sfcgal::PrimitiveParameterDesc &p )

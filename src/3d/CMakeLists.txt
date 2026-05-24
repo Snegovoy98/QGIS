@@ -24,8 +24,11 @@ set(QGIS_3D_SRCS
   qgs3dsceneexporter.cpp
   qgs3dutils.cpp
   qgs3dwiredmesh_p.cpp
+  qgsbloomsettings.cpp
   qgscameracontroller.cpp
   qgscamerapose.cpp
+  qgscategorized3drenderer.cpp
+  qgscategorizedchunkloader_p.cpp
   qgsfeature3dhandler_p.cpp
   qgsfonttextureatlasgenerator.cpp
   qgsgeotransform.cpp
@@ -33,6 +36,7 @@ set(QGIS_3D_SRCS
   qgsgltf3dutils.cpp
   qgsimagetexture.cpp
   qgslayoutitem3dmap.cpp
+  qgslayerstylewatcher.cpp
   qgsmapoverlayentity.cpp
   qgsmapoverlaytexturegenerator_p.cpp
   qgsoffscreen3dengine.cpp
@@ -100,6 +104,9 @@ set(QGIS_3D_SRCS
   framegraph/qgsambientocclusionrenderentity.cpp
   framegraph/qgsambientocclusionrenderview.cpp
   framegraph/qgsambientocclusionblurentity.cpp
+  framegraph/qgsbloomdownsampleentity.cpp
+  framegraph/qgsbloomrenderview.cpp
+  framegraph/qgsbloomupsampleentity.cpp
   framegraph/qgsdepthentity.cpp
   framegraph/qgsdepthrenderview.cpp
   framegraph/qgsforwardrenderview.cpp
@@ -112,6 +119,7 @@ set(QGIS_3D_SRCS
   framegraph/qgsframegraph.cpp
   framegraph/qgsframegraphutils.cpp
 
+  symbols/qgs3dsymbolutils.cpp
   symbols/qgsbillboardgeometry.cpp
   symbols/qgsline3dsymbol.cpp
   symbols/qgsline3dsymbol_p.cpp
@@ -176,13 +184,17 @@ set(QGIS_3D_HDRS
   qgsabstractvectorlayer3drenderer.h
   qgsannotationlayer3drenderer.h
   qgsannotationlayerchunkloader_p.h
+  qgsbloomsettings.h
   qgscameracontroller.h
   qgscamerapose.h
+  qgscategorized3drenderer.h
+  qgscategorizedchunkloader_p.h
   qgsfonttextureatlasgenerator.h
   qgsgeotransform.h
   qgsglobechunkedentity.h
   qgsgltf3dutils.h
   qgslayoutitem3dmap.h
+  qgslayerstylewatcher.h
   qgsmapoverlayentity.h
   qgsmapoverlaytexturegenerator_p.h
   qgsmeshlayer3drenderer.h
@@ -234,6 +246,9 @@ set(QGIS_3D_HDRS
   framegraph/qgsambientocclusionrenderentity.h
   framegraph/qgsambientocclusionrenderview.h
   framegraph/qgsambientocclusionblurentity.h
+  framegraph/qgsbloomdownsampleentity.h
+  framegraph/qgsbloomrenderview.h
+  framegraph/qgsbloomupsampleentity.h
   framegraph/qgsdepthentity.h
   framegraph/qgsdepthrenderview.h
   framegraph/qgsforwardrenderview.h
@@ -246,6 +261,7 @@ set(QGIS_3D_HDRS
   framegraph/qgsrenderpassquad.h
   framegraph/qgsshadowrenderview.h
 
+  symbols/qgs3dsymbolutils.h
   symbols/qgsbillboardgeometry.h
   symbols/qgsline3dsymbol.h
   symbols/qgsmesh3dsymbol.h

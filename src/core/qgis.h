@@ -461,10 +461,10 @@ int QgisEvent = QEvent::User + 1;
      */
     enum class EmbeddedScriptType : int
     {
-      Macro = 0,              //! Project macros
-      ExpressionFunction = 1, //! Expression functions
-      Action = 2,             //! Map layers' action \since QGIS 4.0
-      FormInitCode = 3,       //! Attribute forms' initiation code \since QGIS 4.0
+      Macro = 0,              //!< Project macros
+      ExpressionFunction = 1, //!< Expression functions
+      Action = 2,             //!< Map layers' action \since QGIS 4.0
+      FormInitCode = 3,       //!< Attribute forms' initiation code \since QGIS 4.0
     };
     Q_ENUM( EmbeddedScriptType )
 
@@ -474,9 +474,9 @@ int QgisEvent = QEvent::User + 1;
      */
     enum class ProjectTrustStatus : int
     {
-      Undetermined = 0, //! The project trust has not yet been determined by the user
-      Trusted = 1,      //! The project has been determined by the user as trusted
-      Untrusted = 2,    //! The project has been determined by the user as untrusted
+      Undetermined = 0, //!< The project trust has not yet been determined by the user
+      Trusted = 1,      //!< The project has been determined by the user as trusted
+      Untrusted = 2,    //!< The project has been determined by the user as untrusted
     };
     Q_ENUM( ProjectTrustStatus )
 
@@ -4352,6 +4352,20 @@ int QgisEvent = QEvent::User + 1;
     Q_ENUM( MaterialRenderingTechnique )
 
     /**
+     * Optional per-instance properties of instanced materials.
+     *
+     * \since QGIS 4.2
+     */
+    enum class InstancedMaterialFlag : int SIP_ENUM_BASETYPE( IntFlag )
+    {
+      DataDefinedScale = 1 << 0,    //!< Per-instance data-defined scale
+      DataDefinedRotation = 1 << 1, //!< Per-instance data-defined rotation
+    };
+    Q_ENUM( InstancedMaterialFlag )
+    Q_DECLARE_FLAGS( InstancedMaterialFlags, InstancedMaterialFlag )
+    Q_FLAG( InstancedMaterialFlags )
+
+    /**
      * Texture filtering qualities.
      *
      * \since QGIS 4.2
@@ -4365,6 +4379,21 @@ int QgisEvent = QEvent::User + 1;
       Anisotropic16x, //!< Anisotropic filtering (16x)
     };
     Q_ENUM( TextureFilterQuality )
+
+    /**
+     * Shadow texture quality.
+     *
+     * \since QGIS 4.2
+     */
+    enum class ShadowQuality : int
+    {
+      Low,      //!< Low quality
+      Medium,   //!< Medium quality
+      High,     //!< High quality
+      VeryHigh, //!< Very high quality
+      Extreme,  //!< Extremely high quality
+    };
+    Q_ENUM( ShadowQuality )
 
     /**
      * Light source types for 3D scenes.
@@ -4839,6 +4868,19 @@ int QgisEvent = QEvent::User + 1;
       OptimalInInsertionGroup, //!< Layers are added at optimal locations across the insertion point's group
     };
     Q_ENUM( LayerTreeInsertionMethod )
+
+    /**
+     * Action performed when double-clicking a layer in the legend.
+     *
+     * \since QGIS 4.0
+     */
+    enum class LegendLayerDoubleClickAction : int
+    {
+      LayerProperties = 0, //!< Open the layer properties dialog
+      AttributeTable = 1,  //!< Open the attribute table
+      LayerStyling = 2,    //!< Open the layer styling dock
+    };
+    Q_ENUM( LegendLayerDoubleClickAction )
 
     /**
      * Layer tree filter flags.
@@ -6708,6 +6750,37 @@ int QgisEvent = QEvent::User + 1;
     Q_ENUM( TriangulationAlgorithm )
 
     /**
+     * Request mode of groups in a WMS context.
+     *
+     * When a group is opaque, WMS treats it as a single opaque layer instead
+     * of a collection of individual layers.
+     * Its child layers are hidden from GetCapabilities requests.
+     * Any direct requests (like GetMap or GetFeatureInfo etc.) for a child layer will result in an error.
+     * Child layers are rendered whenever a request is made for the group itself.
+     *
+     * \since QGIS 4.2
+    */
+    enum class WmsGroupRequestMode : int
+    {
+      Normal, //!< Group and children can be requested
+      Opaque, //!< Group can be requested, children cannot (appears like a single layer)
+    };
+    Q_ENUM( WmsGroupRequestMode )
+
+    /**
+     * Dockable widget initial states.
+     *
+     * \since QGIS 4.2
+     */
+    enum class DockableWidgetInitialState : int
+    {
+      RestorePreviousState, //!< Restore the previous state of this dock
+      ForceDocked,          //!< Force the widget to be docked
+      ForceDialog,          //!< Force the widget to be shown in a dialog
+    };
+    Q_ENUM( DockableWidgetInitialState )
+
+    /**
      * Identify search radius in mm
      */
     static const double DEFAULT_SEARCH_RADIUS_MM;
@@ -6997,6 +7070,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::ExtrusionFaces )
 Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::MapGridFrameSideFlags )
 Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::SymbolConverterCapabilities )
 Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::ArcGisRestServiceCapabilities )
+Q_DECLARE_OPERATORS_FOR_FLAGS( Qgis::InstancedMaterialFlags )
 Q_DECLARE_METATYPE( Qgis::LayoutRenderFlags )
 Q_DECLARE_METATYPE( QTimeZone )
 

@@ -85,6 +85,7 @@ QgsSfcgalGeometry::QgsSfcgalGeometry( const QgsSfcgalGeometry &otherGeom )
   mIsPrimitive = otherGeom.mIsPrimitive;
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
   mPrimType = otherGeom.mPrimType;
+  mPrimTransform = otherGeom.mPrimTransform;
   if ( mIsPrimitive )
     mSfcgalPrim = QgsSfcgalEngine::primitiveClone( otherGeom.mSfcgalPrim.get(), &errorMsg );
   else
@@ -253,6 +254,7 @@ bool QgsSfcgalGeometry::operator==( const QgsSfcgalGeometry &other ) const
   throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.1 or later" ) );
 #else
   QString errorMsg;
+  sfcgal::errorHandler()->clearText( &errorMsg );
   bool out;
 
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
@@ -261,6 +263,10 @@ bool QgsSfcgalGeometry::operator==( const QgsSfcgalGeometry &other ) const
 
   if ( mIsPrimitive )
   {
+    if ( mPrimTransform != other.mPrimTransform )
+    {
+      return false;
+    }
     out = QgsSfcgalEngine::primitiveIsEqual( mSfcgalPrim.get(), other.mSfcgalPrim.get(), -1.0, &errorMsg );
   }
   else
@@ -291,6 +297,10 @@ bool QgsSfcgalGeometry::fuzzyEqual( const QgsSfcgalGeometry &other, double epsil
 
   if ( mIsPrimitive )
   {
+    if ( !mPrimTransform.fuzzyEqual( other.mPrimTransform, epsilon ) )
+    {
+      return false;
+    }
     out = QgsSfcgalEngine::primitiveIsEqual( mSfcgalPrim.get(), other.mSfcgalPrim.get(), epsilon, &errorMsg );
   }
   else
@@ -494,8 +504,7 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::translate( const QgsVector
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
   if ( mIsPrimitive )
   {
-    sfcgal::shared_prim prim = QgsSfcgalEngine::primitiveClone( mSfcgalPrim.get(), &errorMsg );
-    resultGeom = QgsSfcgalEngine::toSfcgalGeometry( prim, mPrimType, &errorMsg );
+    resultGeom = clone();
     resultGeom->setPrimitiveTranslate( translation );
   }
   else
@@ -519,8 +528,7 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::scale( const QgsVector3D &
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
   if ( mIsPrimitive )
   {
-    sfcgal::shared_prim prim = QgsSfcgalEngine::primitiveClone( mSfcgalPrim.get(), &errorMsg );
-    resultGeom = QgsSfcgalEngine::toSfcgalGeometry( prim, mPrimType, &errorMsg );
+    resultGeom = clone();
     resultGeom->setPrimitiveScale( scaleFactor, center );
   }
   else
@@ -544,8 +552,7 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::rotate2D( double angle, co
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
   if ( mIsPrimitive )
   {
-    sfcgal::shared_prim prim = QgsSfcgalEngine::primitiveClone( mSfcgalPrim.get(), &errorMsg );
-    resultGeom = QgsSfcgalEngine::toSfcgalGeometry( prim, mPrimType, &errorMsg );
+    resultGeom = clone();
     resultGeom->setPrimitiveRotation( angle, { 0.0, 0.0, 1.0 }, center );
   }
   else
@@ -590,8 +597,7 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::rotate3D( double angle, co
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
   if ( mIsPrimitive )
   {
-    sfcgal::shared_prim prim = QgsSfcgalEngine::primitiveClone( mSfcgalPrim.get(), &errorMsg );
-    resultGeom = QgsSfcgalEngine::toSfcgalGeometry( prim, mPrimType, &errorMsg );
+    resultGeom = clone();
     resultGeom->setPrimitiveRotation( angle, axisVector, center );
   }
   else
@@ -616,7 +622,7 @@ double QgsSfcgalGeometry::area( bool withDiscretization ) const
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
   if ( mIsPrimitive )
   {
-    result = QgsSfcgalEngine::primitiveArea( mSfcgalPrim.get(), withDiscretization, &errorMsg );
+    result = QgsSfcgalEngine::primitiveArea( mSfcgalPrim.get(), mPrimTransform, withDiscretization, &errorMsg );
   }
   else
 #endif
@@ -653,7 +659,7 @@ double QgsSfcgalGeometry::volume( bool withDiscretization ) const
 
   double result;
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
-  result = QgsSfcgalEngine::primitiveVolume( mSfcgalPrim.get(), withDiscretization, &errorMsg );
+  result = QgsSfcgalEngine::primitiveVolume( mSfcgalPrim.get(), mPrimTransform, withDiscretization, &errorMsg );
 #else
   ( void ) withDiscretization;
   throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
@@ -943,6 +949,45 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::toPolyhedralSurface() cons
   return phsGeom;
 }
 
+std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createBox( double sizeX, double sizeY, double sizeZ )
+{
+#if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  QString errorMsg;
+  sfcgal::errorHandler()->clearText( &errorMsg );
+  sfcgal::shared_prim result = QgsSfcgalEngine::createBox( sizeX, sizeY, sizeZ, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+
+  auto resultGeom = QgsSfcgalEngine::toSfcgalGeometry( result, sfcgal::primitiveType::SFCGAL_TYPE_BOX, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+  return resultGeom;
+#else
+  ( void ) sizeX;
+  ( void ) sizeY;
+  ( void ) sizeZ;
+  throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
+#endif
+}
+
+std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createCone( double bottomRadius, double height, double topRadius, unsigned int radial )
+{
+#if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  QString errorMsg;
+  sfcgal::errorHandler()->clearText( &errorMsg );
+  sfcgal::shared_prim result = QgsSfcgalEngine::createCone( bottomRadius, height, topRadius, radial, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+
+  auto resultGeom = QgsSfcgalEngine::toSfcgalGeometry( result, sfcgal::primitiveType::SFCGAL_TYPE_CONE, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+  return resultGeom;
+#else
+  ( void ) bottomRadius;
+  ( void ) height;
+  ( void ) topRadius;
+  ( void ) radial;
+  throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
+#endif
+}
+
 std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createCube( double size )
 {
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
@@ -956,6 +1001,63 @@ std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createCube( double size )
   return resultGeom;
 #else
   ( void ) size;
+  throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
+#endif
+}
+
+std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createCylinder( double radius, double height, unsigned int radial )
+{
+#if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  QString errorMsg;
+  sfcgal::errorHandler()->clearText( &errorMsg );
+  sfcgal::shared_prim result = QgsSfcgalEngine::createCylinder( radius, height, radial, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+
+  auto resultGeom = QgsSfcgalEngine::toSfcgalGeometry( result, sfcgal::primitiveType::SFCGAL_TYPE_CYLINDER, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+  return resultGeom;
+#else
+  ( void ) radius;
+  ( void ) height;
+  ( void ) radial;
+  throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
+#endif
+}
+
+std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createSphere( double radius, unsigned int subdivisions )
+{
+#if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  QString errorMsg;
+  sfcgal::errorHandler()->clearText( &errorMsg );
+  sfcgal::shared_prim result = QgsSfcgalEngine::createSphere( radius, subdivisions, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+
+  auto resultGeom = QgsSfcgalEngine::toSfcgalGeometry( result, sfcgal::primitiveType::SFCGAL_TYPE_SPHERE, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+  return resultGeom;
+#else
+  ( void ) radius;
+  ( void ) subdivisions;
+  throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
+#endif
+}
+
+std::unique_ptr<QgsSfcgalGeometry> QgsSfcgalGeometry::createTorus( double mainRadius, double tubeRadius, unsigned int mainRadial, unsigned int tubeRadial )
+{
+#if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
+  QString errorMsg;
+  sfcgal::errorHandler()->clearText( &errorMsg );
+  sfcgal::shared_prim result = QgsSfcgalEngine::createTorus( mainRadius, tubeRadius, mainRadial, tubeRadial, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+
+  auto resultGeom = QgsSfcgalEngine::toSfcgalGeometry( result, sfcgal::primitiveType::SFCGAL_TYPE_TORUS, &errorMsg );
+  THROW_ON_ERROR( &errorMsg );
+  return resultGeom;
+#else
+  ( void ) mainRadius;
+  ( void ) tubeRadius;
+  ( void ) mainRadial;
+  ( void ) tubeRadial;
   throw QgsNotSupportedException( QObject::tr( "This operation requires a QGIS build based on SFCGAL 2.3 or later" ) );
 #endif
 }
@@ -1054,30 +1156,49 @@ void QgsSfcgalGeometry::primitiveSetParameter( const QString &name, const QVaria
 #if SFCGAL_VERSION_NUM >= SFCGAL_MAKE_VERSION( 2, 3, 0 )
 void QgsSfcgalGeometry::setPrimitiveTranslate( const QgsVector3D &translation )
 {
-  const double *primTransformData = mPrimTransform.constData();
-  QgsVector3D prevTrans( primTransformData[12], primTransformData[13], primTransformData[14] );
-  mPrimTransform.translate( prevTrans + translation );
+  QgsMatrix4x4 mat;
+  mat.translate( translation );
+  mPrimTransform = mat * mPrimTransform;
 }
 
 void QgsSfcgalGeometry::setPrimitiveScale( const QgsVector3D &scaleFactor, const QgsPoint &center )
 {
-  QgsVector3D qCenter( center.x(), center.y(), center.z() );
-  const double *primTransformData = mPrimTransform.constData();
-  QgsVector3D prevTrans( primTransformData[12], primTransformData[13], primTransformData[14] );
-  mPrimTransform.translate( prevTrans - qCenter );
-  mPrimTransform.scale( scaleFactor );
-  mPrimTransform.translate( prevTrans + qCenter );
+  QgsVector3D qCenter;
+  if ( center.isEmpty() )
+  {
+    qCenter = QgsVector3D( 0.0, 0.0, 0.0 );
+  }
+  else
+  {
+    qCenter = QgsVector3D( center.x(), center.y(), center.z() );
+  }
+
+  QgsMatrix4x4 mat;
+  mat.translate( qCenter );
+  mat.scale( scaleFactor );
+  mat.translate( -qCenter );
+
+  mPrimTransform = mat * mPrimTransform;
 }
 
 void QgsSfcgalGeometry::setPrimitiveRotation( double angle, const QgsVector3D &axisVector, const QgsPoint &center )
 {
-  QgsVector3D qCenter( center.x(), center.y(), center.z() );
-  const double *primTransformData = mPrimTransform.constData();
-  QgsVector3D prevTrans( primTransformData[12], primTransformData[13], primTransformData[14] );
-  mPrimTransform.translate( prevTrans - qCenter );
-  // TODO: need to merge previous rotation values with the new ones
-  mPrimTransform.rotate( angle * 180.0 / M_PI, axisVector );
-  mPrimTransform.translate( prevTrans + qCenter );
+  QgsVector3D qCenter;
+  if ( center.isEmpty() )
+  {
+    qCenter = QgsVector3D( 0.0, 0.0, 0.0 );
+  }
+  else
+  {
+    qCenter = QgsVector3D( center.x(), center.y(), center.z() );
+  }
+
+  QgsMatrix4x4 mat;
+  mat.translate( qCenter );
+  mat.rotate( angle * 180.0 / M_PI, axisVector );
+  mat.translate( -qCenter );
+
+  mPrimTransform = mat * mPrimTransform;
 }
 
 #endif
