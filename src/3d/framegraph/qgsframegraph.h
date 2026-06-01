@@ -62,6 +62,7 @@ class QgsShadowRenderView;
 class QgsShadowSettings;
 class QgsBloomRenderView;
 class QgsBloomSettings;
+class QgsColorGradingSettings;
 
 /**
  * \ingroup qgis_3d
@@ -237,7 +238,7 @@ class _3D_EXPORT QgsFrameGraph : public Qt3DCore::QEntity
      * Updates shadow bias, light and texture size according to \a shadowSettings and \a lightSources
      * \since QGIS 3.44
      */
-    void updateShadowSettings( const QgsShadowSettings &shadowSettings, const QList<QgsLightSource *> &lightSources );
+    void updateShadowSettings( const Qgs3DMapSettings &mapSettings );
 
     /**
      * Updates settings for depth debug map
@@ -262,6 +263,13 @@ class _3D_EXPORT QgsFrameGraph : public Qt3DCore::QEntity
      * \since QGIS 4.2
      */
     void updateBloomSettings( const QgsBloomSettings &settings );
+
+    /**
+     * Updates settings for color grading.
+     *
+     * \since QGIS 4.2
+     */
+    void updateColorGradingSettings( const QgsColorGradingSettings &settings );
 
     static const QString FORWARD_RENDERVIEW;
     static const QString SHADOW_RENDERVIEW;

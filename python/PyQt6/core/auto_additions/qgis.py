@@ -7852,12 +7852,17 @@ Qgis.ShadowQuality.baseClass = Qgis
 # monkey patching scoped based enum
 Qgis.LightSourceType.Point.__doc__ = "Point light source"
 Qgis.LightSourceType.Directional.__doc__ = "Directional light source"
+Qgis.LightSourceType.Sun.__doc__ = "Sun based light source \n.. versionadded:: 4.2"
 Qgis.LightSourceType.__doc__ = """Light source types for 3D scenes.
 
 .. versionadded:: 3.26
 
 * ``Point``: Point light source
 * ``Directional``: Directional light source
+* ``Sun``: Sun based light source
+
+  .. versionadded:: 4.2
+
 
 """
 # --
@@ -7942,6 +7947,20 @@ Qgis.VerticalAxisInversion.__doc__ = """Vertical axis inversion options for 3D v
 """
 # --
 Qgis.VerticalAxisInversion.baseClass = Qgis
+# monkey patching scoped based enum
+Qgis.ToneMappingMethod.Clamp.__doc__ = "Clamp HDR colors to SDR color ranges, leave SDR colors unchanged. This is computationally cheap and ensures exact reproduction of SDR colors, but causes bright highlights to visibly clip and lose detail."
+Qgis.ToneMappingMethod.Aces.__doc__ = "Applies an approximation to the Academy Color Encoding System (ACES) filmic tone curve. This provides a natural, cinematic highlight roll-off and preserves detail in extreme brightness."
+Qgis.ToneMappingMethod.__doc__ = """Defines the method used to map High Dynamic Range (HDR) scene colors
+to the Standard Dynamic Range (SDR) of a display monitor.
+
+.. versionadded:: 4.2
+
+* ``Clamp``: Clamp HDR colors to SDR color ranges, leave SDR colors unchanged. This is computationally cheap and ensures exact reproduction of SDR colors, but causes bright highlights to visibly clip and lose detail.
+* ``Aces``: Applies an approximation to the Academy Color Encoding System (ACES) filmic tone curve. This provides a natural, cinematic highlight roll-off and preserves detail in extreme brightness.
+
+"""
+# --
+Qgis.ToneMappingMethod.baseClass = Qgis
 # monkey patching scoped based enum
 Qgis.Export3DSceneFormat.Obj.__doc__ = "Wavefront OBJ format."
 Qgis.Export3DSceneFormat.StlAscii.__doc__ = "STL ascii format."

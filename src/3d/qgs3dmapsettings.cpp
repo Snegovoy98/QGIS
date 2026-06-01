@@ -31,6 +31,7 @@
 #include "qgsprojectelevationproperties.h"
 #include "qgsprojectviewsettings.h"
 #include "qgsrasterlayer.h"
+#include "qgssunlightsettings.h"
 #include "qgsterrainprovider.h"
 #include "qgsthreadingutils.h"
 
@@ -81,6 +82,7 @@ Qgs3DMapSettings::Qgs3DMapSettings( const Qgs3DMapSettings &other )
   , mShadowSettings( other.mShadowSettings )
   , mAmbientOcclusionSettings( other.mAmbientOcclusionSettings )
   , mBloomSettings( other.mBloomSettings )
+  , mColorGradingSettings( other.mColorGradingSettings )
   , mEyeDomeLightingEnabled( other.mEyeDomeLightingEnabled )
   , mEyeDomeLightingStrength( other.mEyeDomeLightingStrength )
   , mEyeDomeLightingDistance( other.mEyeDomeLightingDistance )
@@ -152,7 +154,7 @@ void Qgs3DMapSettings::readXml( const QDomElement &elem, const QgsReadWriteConte
   QDomElement elemCamera = elem.firstChildElement( u"camera"_s );
   if ( !elemCamera.isNull() )
   {
-    mFieldOfView = elemCamera.attribute( u"field-of-view"_s, u"45"_s ).toFloat();
+    mFieldOfView = elemCamera.attribute( u"field-of-view"_s, u"45"_s ).toDouble();
     mProjectionType = static_cast<Qt3DRender::QCameraLens::ProjectionType>( elemCamera.attribute( u"projection-type"_s, u"1"_s ).toInt() );
     QString cameraNavigationMode = elemCamera.attribute( u"camera-navigation-mode"_s, u"basic-navigation"_s );
     if ( cameraNavigationMode == "terrain-based-navigation"_L1 )
@@ -287,6 +289,11 @@ void Qgs3DMapSettings::readXml( const QDomElement &elem, const QgsReadWriteConte
   {
     QDomElement elemBloom = elem.firstChildElement( u"bloom"_s );
     mBloomSettings.readXml( elemBloom, context );
+  }
+
+  {
+    QDomElement elemColorGrading = elem.firstChildElement( u"color-grading"_s );
+    mColorGradingSettings.readXml( elemColorGrading, context );
   }
 
   QDomElement elemEyeDomeLighting = elem.firstChildElement( u"eye-dome-lighting"_s );
@@ -435,6 +442,12 @@ QDomElement Qgs3DMapSettings::writeXml( QDomDocument &doc, const QgsReadWriteCon
     QDomElement elemBloom = doc.createElement( u"bloom"_s );
     mBloomSettings.writeXml( elemBloom, context );
     elem.appendChild( elemBloom );
+  }
+
+  {
+    QDomElement elemColorGrading = doc.createElement( u"color-grading"_s );
+    mColorGradingSettings.writeXml( elemColorGrading, context );
+    elem.appendChild( elemColorGrading );
   }
 
   QDomElement elemDebug = doc.createElement( u"debug"_s );
@@ -1193,6 +1206,10 @@ void Qgs3DMapSettings::setLightSources( const QList<QgsLightSource *> &lights )
             if ( *static_cast<QgsDirectionalLightSettings *>( mLightSources[i] ) == *static_cast<QgsDirectionalLightSettings *>( lights[i] ) )
               continue;
             break;
+          case Qgis::LightSourceType::Sun:
+            if ( *static_cast<QgsSunLightSettings *>( mLightSources[i] ) == *static_cast<QgsSunLightSettings *>( lights[i] ) )
+              continue;
+            break;
         }
       }
       same = false;
@@ -1213,14 +1230,14 @@ void Qgs3DMapSettings::setLightSources( const QList<QgsLightSource *> &lights )
   emit lightSourcesChanged();
 }
 
-float Qgs3DMapSettings::fieldOfView() const
+double Qgs3DMapSettings::fieldOfView() const
 {
   QGIS_PROTECT_QOBJECT_THREAD_ACCESS
 
   return mFieldOfView;
 }
 
-void Qgs3DMapSettings::setFieldOfView( const float fieldOfView )
+void Qgs3DMapSettings::setFieldOfView( const double fieldOfView )
 {
   QGIS_PROTECT_QOBJECT_THREAD_ACCESS
 
@@ -1329,6 +1346,13 @@ QgsBloomSettings Qgs3DMapSettings::bloomSettings() const
   return mBloomSettings;
 }
 
+QgsColorGradingSettings Qgs3DMapSettings::colorGradingSettings() const
+{
+  QGIS_PROTECT_QOBJECT_THREAD_ACCESS
+
+  return mColorGradingSettings;
+}
+
 void Qgs3DMapSettings::setSkyboxSettings( const QgsSkyboxSettings &skyboxSettings )
 {
   QGIS_PROTECT_QOBJECT_THREAD_ACCESS
@@ -1358,6 +1382,14 @@ void Qgs3DMapSettings::setBloomSettings( const QgsBloomSettings &settings )
 
   mBloomSettings = settings;
   emit bloomSettingsChanged();
+}
+
+void Qgs3DMapSettings::setColorGradingSettings( const QgsColorGradingSettings &settings )
+{
+  QGIS_PROTECT_QOBJECT_THREAD_ACCESS
+
+  mColorGradingSettings = settings;
+  emit colorGradingSettingsChanged();
 }
 
 bool Qgs3DMapSettings::isSkyboxEnabled() const

@@ -4404,6 +4404,7 @@ int QgisEvent = QEvent::User + 1;
     {
       Point,       //!< Point light source
       Directional, //!< Directional light source
+      Sun,         //!< Sun based light source \since QGIS 4.2
     };
     Q_ENUM( LightSourceType )
 
@@ -4471,6 +4472,19 @@ int QgisEvent = QEvent::User + 1;
       Always,       //!< Always invert vertical axis movements
     };
     Q_ENUM( VerticalAxisInversion )
+
+    /**
+     * Defines the method used to map High Dynamic Range (HDR) scene colors
+     * to the Standard Dynamic Range (SDR) of a display monitor.
+     *
+     * \since QGIS 4.2
+     */
+    enum class ToneMappingMethod : int
+    {
+      Clamp, //!< Clamp HDR colors to SDR color ranges, leave SDR colors unchanged. This is computationally cheap and ensures exact reproduction of SDR colors, but causes bright highlights to visibly clip and lose detail.
+      Aces, //!< Applies an approximation to the Academy Color Encoding System (ACES) filmic tone curve. This provides a natural, cinematic highlight roll-off and preserves detail in extreme brightness.
+    };
+    Q_ENUM( ToneMappingMethod )
 
     /**
      * The file format used when exporting a 3D scene.

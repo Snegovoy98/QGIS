@@ -2469,6 +2469,7 @@ The development version
     {
       Point,
       Directional,
+      Sun,
     };
 
     enum class Map3DBackgroundType /BaseType=IntEnum/
@@ -2505,6 +2506,12 @@ The development version
       Never,
       WhenDragging,
       Always,
+    };
+
+    enum class ToneMappingMethod /BaseType=IntEnum/
+    {
+      Clamp,
+      Aces,
     };
 
     enum class Export3DSceneFormat /BaseType=IntEnum/

@@ -681,14 +681,14 @@ Ownership of the lights is transferred to the settings.
 .. versionadded:: 3.26
 %End
 
-    float fieldOfView() const;
+    double fieldOfView() const;
 %Docstring
 Returns the camera lens' field of view
 
 .. versionadded:: 3.8
 %End
 
-    void setFieldOfView( const float fieldOfView );
+    void setFieldOfView( double fieldOfView );
 %Docstring
 Sets the camera lens' field of view
 
@@ -729,6 +729,8 @@ pixels Default value is 96
 
 .. versionadded:: 3.10
 %End
+
+
 
 
 
@@ -1241,6 +1243,17 @@ Emitted when the bloom lighting effect settings are changed.
 .. seealso:: :py:func:`bloomSettings`
 
 .. seealso:: :py:func:`setBloomSettings`
+
+.. versionadded:: 4.2
+%End
+
+    void colorGradingSettingsChanged();
+%Docstring
+Emitted when the color grading settings are changed.
+
+.. seealso:: :py:func:`colorGradingSettings`
+
+.. seealso:: :py:func:`setColorGradingSettings`
 
 .. versionadded:: 4.2
 %End

@@ -24,6 +24,8 @@
 class QgsFrameGraph;
 class QgsShadowRenderView;
 class QgsDirectionalLightSettings;
+class QgsColorGradingSettings;
+class QgsVector3D;
 
 namespace Qt3DRender
 {
@@ -76,7 +78,7 @@ class QgsPostprocessingEntity : public QgsRenderPassQuad
      * Sets shadow rendering to use a directional light
      * \since QGIS 3.44
      */
-    void updateShadowSettings( const QgsDirectionalLightSettings &light, float maximumShadowRenderingDistance );
+    void updateShadowSettings( const QgsVector3D &lightDirection, float maximumShadowRenderingDistance );
 
     /**
      * Sets whether screen space ambient occlusion is enabled
@@ -95,6 +97,13 @@ class QgsPostprocessingEntity : public QgsRenderPassQuad
      * The default factor is 0.05.
      */
     void setBloomFactor( float factor );
+
+    /**
+     * Updates settings for color grading.
+     *
+     * \since QGIS 4.2
+     */
+    void updateColorGradingSettings( const QgsColorGradingSettings &settings );
 
   private:
     Qt3DRender::QCamera *mMainCamera = nullptr;
@@ -127,6 +136,9 @@ class QgsPostprocessingEntity : public QgsRenderPassQuad
     Qt3DRender::QParameter *mBloomTextureParameter = nullptr;
     Qt3DRender::QParameter *mBloomEnabledParameter = nullptr;
     Qt3DRender::QParameter *mBloomFactorParameter = nullptr;
+
+    Qt3DRender::QParameter *mExposureParameter = nullptr;
+    Qt3DRender::QParameter *mToneMappingParameter = nullptr;
 };
 
 #endif // QGSPOSTPROCESSINGENTITY_H

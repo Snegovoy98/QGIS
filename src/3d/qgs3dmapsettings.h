@@ -24,6 +24,7 @@
 #include "qgsabstractterrainsettings.h"
 #include "qgsambientocclusionsettings.h"
 #include "qgsbloomsettings.h"
+#include "qgscolorgradingsettings.h"
 #include "qgscoordinatereferencesystem.h"
 #include "qgsmaplayerref.h"
 #include "qgsphongmaterialsettings.h"
@@ -581,13 +582,13 @@ class _3D_EXPORT Qgs3DMapSettings : public QObject, public QgsTemporalRangeObjec
      * Returns the camera lens' field of view
      * \since QGIS 3.8
      */
-    float fieldOfView() const;
+    double fieldOfView() const;
 
     /**
      * Sets the camera lens' field of view
      * \since QGIS 3.8
      */
-    void setFieldOfView( const float fieldOfView );
+    void setFieldOfView( double fieldOfView );
 
     /**
      * Returns the camera lens' projection type
@@ -671,6 +672,15 @@ class _3D_EXPORT Qgs3DMapSettings : public QObject, public QgsTemporalRangeObjec
     QgsBloomSettings bloomSettings() const SIP_SKIP;
 
     /**
+     * Returns the current color grading settings for the map.
+     *
+     * \see setColorGradingSettings()
+     * \see colorGradingSettingsChanged()
+     * \since QGIS 4.2
+     */
+    QgsColorGradingSettings colorGradingSettings() const SIP_SKIP;
+
+    /**
      * Sets the current configuration of the skybox
      * \since QGIS 3.16
      * \deprecated QGIS 4.2. Use setBackgroundSettings() instead.
@@ -697,6 +707,15 @@ class _3D_EXPORT Qgs3DMapSettings : public QObject, public QgsTemporalRangeObjec
      * \since QGIS 4.2
      */
     void setBloomSettings( const QgsBloomSettings &settings ) SIP_SKIP;
+
+    /**
+     * Sets the current color grading \a settings.
+     *
+     * \see colorGradingSettings()
+     * \see colorGradingSettingsChanged()
+     * \since QGIS 4.2
+     */
+    void setColorGradingSettings( const QgsColorGradingSettings &settings ) SIP_SKIP;
 
     /**
      * Returns whether the skybox is enabled.
@@ -1113,6 +1132,15 @@ class _3D_EXPORT Qgs3DMapSettings : public QObject, public QgsTemporalRangeObjec
     void bloomSettingsChanged();
 
     /**
+     * Emitted when the color grading settings are changed.
+     *
+     * \see colorGradingSettings()
+     * \see setColorGradingSettings()
+     * \since QGIS 4.2
+     */
+    void colorGradingSettingsChanged();
+
+    /**
      * Emitted when the FPS counter is enabled or disabled
      * \since QGIS 3.18
      */
@@ -1201,7 +1229,7 @@ class _3D_EXPORT Qgs3DMapSettings : public QObject, public QgsTemporalRangeObjec
     bool mStopUpdates = false;                        //!< Whether to stop updating scene on zoom
     bool mShowDebugPanel = false;                     //!< Whether to show debug panel
     QList<QgsLightSource *> mLightSources;            //!< List of light sources in the scene (owned by the settings)
-    float mFieldOfView = 45.0f;                       //<! Camera lens field of view value
+    double mFieldOfView = 45.0;                       //!< Camera lens field of view value
     Qt3DRender::QCameraLens::ProjectionType mProjectionType = Qt3DRender::QCameraLens::PerspectiveProjection; //<! Camera lens projection type
     Qgis::NavigationMode mCameraNavigationMode = Qgis::NavigationMode::TerrainBased;
     double mCameraMovementSpeed = 5.0;
@@ -1217,6 +1245,7 @@ class _3D_EXPORT Qgs3DMapSettings : public QObject, public QgsTemporalRangeObjec
     QgsShadowSettings mShadowSettings;                                       //!< Shadow rendering related settings
     QgsAmbientOcclusionSettings mAmbientOcclusionSettings;                   //!< Screen Space Ambient Occlusion related settings
     QgsBloomSettings mBloomSettings;                                         //!< Bloom effect settings
+    QgsColorGradingSettings mColorGradingSettings;
 
     bool mEyeDomeLightingEnabled = false;
     double mEyeDomeLightingStrength = 1000.0;

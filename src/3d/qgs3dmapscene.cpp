@@ -120,7 +120,7 @@ Qgs3DMapScene::Qgs3DMapScene( Qgs3DMapSettings &map, QgsAbstract3DEngine *engine
 
   // Camera
   float aspectRatio = ( float ) viewportRect.width() / viewportRect.height();
-  mEngine->camera()->lens()->setPerspectiveProjection( mMap.fieldOfView(), aspectRatio, 10.f, 10000.0f );
+  mEngine->camera()->lens()->setPerspectiveProjection( static_cast< float >( mMap.fieldOfView() ), aspectRatio, 10.f, 10000.0f );
 
   mFrameAction = new Qt3DLogic::QFrameAction();
   connect( mFrameAction, &Qt3DLogic::QFrameAction::triggered, this, &Qgs3DMapScene::onFrameTriggered );
@@ -154,6 +154,7 @@ Qgs3DMapScene::Qgs3DMapScene( Qgs3DMapSettings &map, QgsAbstract3DEngine *engine
   connect( &map, &Qgs3DMapSettings::shadowSettingsChanged, this, &Qgs3DMapScene::onShadowSettingsChanged );
   connect( &map, &Qgs3DMapSettings::ambientOcclusionSettingsChanged, this, &Qgs3DMapScene::onAmbientOcclusionSettingsChanged );
   connect( &map, &Qgs3DMapSettings::bloomSettingsChanged, this, &Qgs3DMapScene::onBloomSettingsChanged );
+  connect( &map, &Qgs3DMapSettings::colorGradingSettingsChanged, this, &Qgs3DMapScene::onColorGradingSettingsChanged );
   connect( &map, &Qgs3DMapSettings::eyeDomeLightingEnabledChanged, this, &Qgs3DMapScene::onEyeDomeShadingSettingsChanged );
   connect( &map, &Qgs3DMapSettings::eyeDomeLightingStrengthChanged, this, &Qgs3DMapScene::onEyeDomeShadingSettingsChanged );
   connect( &map, &Qgs3DMapSettings::eyeDomeLightingDistanceChanged, this, &Qgs3DMapScene::onEyeDomeShadingSettingsChanged );
@@ -226,6 +227,8 @@ Qgs3DMapScene::Qgs3DMapScene( Qgs3DMapSettings &map, QgsAbstract3DEngine *engine
   onMsaaEnabledChanged();
   // initial state of bloom setting
   onBloomSettingsChanged();
+  // initial state of color grading
+  onColorGradingSettingsChanged();
 
   // timer used to refresh the map overlay every 250 ms while the camera is moving.
   // schedule2DMapOverlayUpdate() is called to schedule the update.
@@ -714,7 +717,7 @@ void Qgs3DMapScene::updateLights()
 
 void Qgs3DMapScene::updateCameraLens()
 {
-  mEngine->camera()->lens()->setFieldOfView( mMap.fieldOfView() );
+  mEngine->camera()->lens()->setFieldOfView( static_cast< float >( mMap.fieldOfView() ) );
   mEngine->camera()->lens()->setProjectionType( mMap.projectionType() );
   onCameraChanged();
 }
@@ -1209,7 +1212,7 @@ void Qgs3DMapScene::onBackgroundSettingsChanged()
 
 void Qgs3DMapScene::onShadowSettingsChanged()
 {
-  mEngine->frameGraph()->updateShadowSettings( mMap.shadowSettings(), mMap.lightSources() );
+  mEngine->frameGraph()->updateShadowSettings( mMap );
 }
 
 void Qgs3DMapScene::onAmbientOcclusionSettingsChanged()
@@ -1220,6 +1223,11 @@ void Qgs3DMapScene::onAmbientOcclusionSettingsChanged()
 void Qgs3DMapScene::onBloomSettingsChanged()
 {
   mEngine->frameGraph()->updateBloomSettings( mMap.bloomSettings() );
+}
+
+void Qgs3DMapScene::onColorGradingSettingsChanged()
+{
+  mEngine->frameGraph()->updateColorGradingSettings( mMap.colorGradingSettings() );
 }
 
 void Qgs3DMapScene::onDebugDepthMapSettingsChanged()
