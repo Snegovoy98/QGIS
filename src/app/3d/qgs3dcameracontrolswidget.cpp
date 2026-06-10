@@ -21,6 +21,7 @@
 #include "qgs3dutils.h"
 #include "qgscameracontroller.h"
 #include "qgscoordinatereferencesystem.h"
+#include "qgshelp.h"
 #include "qgslayoututils.h"
 #include "qgssettingstree.h"
 
@@ -46,6 +47,7 @@ Qgs3DCameraControlsWidget::Qgs3DCameraControlsWidget( Qgs3DMapCanvas *canvas, QW
   connect( mAutoApplyTimer, &QTimer::timeout, this, &Qgs3DCameraControlsWidget::applySettings );
 
   connect( mButtonBox->button( QDialogButtonBox::Apply ), &QAbstractButton::clicked, this, &Qgs3DCameraControlsWidget::applySettings );
+  connect( mHelpButtonBox, &QDialogButtonBox::helpRequested, this, [] { QgsHelp::openHelp( u"map_views/3d_map_view.html"_s ); } );
   connect( mLiveApplyCheck, &QCheckBox::toggled, this, &Qgs3DCameraControlsWidget::liveApplyToggled );
 
   mLiveApplyCheck->setChecked( setting3DCameraControlsLiveUpdate->value() );

@@ -54,7 +54,8 @@ QgsMaterial *QgsMetalRoughTexturedMaterial3DHandler::toMaterial( const QgsAbstra
         return new QgsHighlightMaterial( technique );
       }
 
-      QgsMetalRoughMaterial *material = new QgsMetalRoughMaterial();
+      QgsMetalRoughMaterial *material = new QgsMetalRoughMaterial( nullptr );
+      material->setEnvironmentalLightingEnabled( !context.isPreview() );
       material->setObjectName( u"metalRoughTexturedMaterial"_s );
       applySettingsToMaterial( texturedSettings, material, context );
 
@@ -71,6 +72,7 @@ QgsMaterial *QgsMetalRoughTexturedMaterial3DHandler::toInstancedMaterial( const 
   const QgsMetalRoughTexturedMaterialSettings *texturedSettings = qgis::down_cast< const QgsMetalRoughTexturedMaterialSettings * >( settings );
 
   QgsMetalRoughMaterial *material = new QgsMetalRoughMaterial();
+  material->setEnvironmentalLightingEnabled( true );
   material->setInstancingEnabled( true, flags );
 
   material->setObjectName( u"metalRoughTexturedMaterial"_s );
@@ -132,6 +134,7 @@ void QgsMetalRoughTexturedMaterial3DHandler::applySettingsToMaterial( const QgsM
 {
   material->setTextureScale( static_cast<float>( texturedSettings->textureScale() ) );
   material->setTextureRotation( static_cast<float>( texturedSettings->textureRotation() ) );
+  material->setTextureOffset( static_cast<float>( texturedSettings->textureOffset().x() ), static_cast<float>( texturedSettings->textureOffset().y() ) );
 
   // base color
   if ( Qt3DRender::QTexture2D *baseTex = loadTexture( texturedSettings->baseColorTexturePath(), true, context ) )
@@ -215,4 +218,10 @@ void QgsMetalRoughTexturedMaterial3DHandler::applySettingsToMaterial( const QgsM
 
   material->setEmissionFactor( texturedSettings->emissionFactor() );
   material->setOpacity( static_cast< float >( texturedSettings->opacity() ) );
+
+  const QgsPropertyCollection ddProps = texturedSettings->dataDefinedProperties();
+  const bool hasDDTextureTransform = ddProps.isActive( QgsAbstractMaterialSettings::Property::TextureOffset )
+                                     || ddProps.isActive( QgsAbstractMaterialSettings::Property::TextureScale )
+                                     || ddProps.isActive( QgsAbstractMaterialSettings::Property::TextureRotation );
+  material->setDataDefinedTextureTransformEnabled( hasDDTextureTransform );
 };

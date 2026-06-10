@@ -57,6 +57,7 @@
 #include <QString>
 #include <QSvgGenerator>
 #include <QTextStream>
+#include <QTimer>
 #include <QToolButton>
 #include <QUndoView>
 #include <QUrl>
@@ -335,7 +336,7 @@ QgsModelDesignerDialog::QgsModelDesignerDialog( QWidget *parent, Qt::WindowFlags
 
   // We use a QObjectUniquePtr here because we want to delete QgsModelViewToolSelect
   // mouse handles before everything else and don't want to wait for QObject destructor to destroy it
-  mSelectTool.reset( new QgsModelViewToolSelect( mView ) );
+  mSelectTool = make_qobject_unique<QgsModelViewToolSelect>( mView );
   mSelectTool->setAction( mActionSelectMoveItem );
 
   mToolsActionGroup->addAction( mActionSelectMoveItem );
@@ -491,7 +492,7 @@ void QgsModelDesignerDialog::setModel( QgsProcessingModelAlgorithm *model )
 
   // Delay zoom to the full model to ensure the scene has been properly set
   // and that the itemsBoundingRect returns the correct value.
-  QMetaObject::invokeMethod( this, &QgsModelDesignerDialog::zoomFull, Qt::QueuedConnection );
+  QTimer::singleShot( 100, this, [this] { zoomFull(); } );
 }
 
 void QgsModelDesignerDialog::loadModel( const QString &path )

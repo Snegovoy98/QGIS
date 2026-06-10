@@ -30,6 +30,7 @@ set(QGIS_3D_SRCS
   qgscamerapose.cpp
   qgscategorized3drenderer.cpp
   qgscategorizedchunkloader_p.cpp
+  qgsenvironmentlight.cpp
   qgsfeature3dhandler_p.cpp
   qgsfonttextureatlasgenerator.cpp
   qgsgeotransform.cpp
@@ -117,6 +118,7 @@ set(QGIS_3D_SRCS
   framegraph/qgsoverlaytexturerenderview.cpp
   framegraph/qgspostprocessingentity.cpp
   framegraph/qgsrenderpassquad.cpp
+  framegraph/qgspostprocessingrenderview.cpp
   framegraph/qgsshadowrenderview.cpp
   framegraph/qgsframegraph.cpp
   framegraph/qgsframegraphutils.cpp
@@ -192,6 +194,7 @@ set(QGIS_3D_HDRS
   qgscamerapose.h
   qgscategorized3drenderer.h
   qgscategorizedchunkloader_p.h
+  qgsenvironmentlight.h
   qgsfonttextureatlasgenerator.h
   qgsgeotransform.h
   qgsglobechunkedentity.h
@@ -263,6 +266,7 @@ set(QGIS_3D_HDRS
   framegraph/qgsoverlaytexturerenderview.h
   framegraph/qgspostprocessingentity.h
   framegraph/qgsrenderpassquad.h
+  framegraph/qgspostprocessingrenderview.h
   framegraph/qgsshadowrenderview.h
 
   symbols/qgs3dsymbolutils.h
